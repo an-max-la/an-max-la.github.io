@@ -1843,3 +1843,16 @@ select:hover{border-color:#cfc9ef}
  .closing-refund-row{align-items:flex-start;flex-direction:column}
  .closing-refund-amount{align-items:flex-start}
 }
+
+/* iOS Safari gives native date inputs a large intrinsic inline size. Constrain the
+   expense dialog grid and its date control to the same content width as selects. */
+#expenseDialog .formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#expenseDialog .formgrid>label{min-width:0}
+#expenseDialog #expenseDate{
+ display:block;width:100%;max-width:100%;min-width:0;
+ box-sizing:border-box;font-size:16px;
+}
+@media(max-width:520px){
+ #expenseDialog .formgrid{grid-template-columns:minmax(0,1fr)}
+ #expenseDialog #expenseDate{width:100%;max-width:100%;min-width:0}
+}
