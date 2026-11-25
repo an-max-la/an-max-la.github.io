@@ -56,7 +56,7 @@ test('missing members or negative fund prevent finalization',()=>{
  assert.equal(r.canRefund,false);
  assert.match(r.issues.join(' '),/chưa có thành viên/);
 });
-test('trip UI shows per-member refund details, warns before payout and never posts money',()=>{
+test('trip UI previews split-aware refunds and records confirmations separately from expenses',()=>{
  const app=read('app.js'),html=read('index.html');
  for(const id of ['closingRefundSection','closingRefundSummary','closingRefundWarnings','closingRefundList','copyClosingRefunds'])
   assert.match(html,new RegExp('id="'+id+'"'));
@@ -65,7 +65,9 @@ test('trip UI shows per-member refund details, warns before payout and never pos
  assert.match(app,/closeReport\.canRefund/);
  assert.match(app,/navigator\.clipboard\.writeText/);
  const block=app.slice(app.indexOf('const closeReport='),app.indexOf('const expenseTransfers='));
- assert.doesNotMatch(block,/db\.from\(|db\.rpc\(/);
+ assert.ok(block.includes("db.from('trip_member_refunds').insert(entries)"));
+ assert.ok(!block.includes("db.from('expenses').insert(") && !block.includes("db.from('contributions').insert("));
+ assert.ok(block.includes('localizedConfirm('));
 });
 
 test('missing split participant and orphan contributions block unsafe closure',()=>{

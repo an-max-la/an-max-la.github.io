@@ -18,7 +18,7 @@
  const range=(sheet,col,count)=>"'"+sheet+"'!"+col+"2:"+col+Math.max(2,count+1);
  function workbook(input){
   const trip=input.trip||{};
-  const members=[...(input.members||[])],expenses=[...(input.expenses||[])],contributions=[...(input.contributions||[])],debts=[...(input.debts||[])],payments=[...(input.payments||[])],reminders=[...(input.reminders||[])];
+  const members=[...(input.members||[])],expenses=[...(input.expenses||[])],contributions=[...(input.contributions||[])],debts=[...(input.debts||[])],payments=[...(input.payments||[])],reminders=[...(input.reminders||[])],refunds=[...(input.refunds||[])];
   const F=(typeof TripTogetherFinance!=='undefined'&&TripTogetherFinance) || (typeof window!=='undefined'&&window.TripTogetherFinance);
   if(!F)throw Error('Không thể xuất Excel khi chưa tải bộ tính toán TripTogether.');
   const enrichedRecords=F.applyPayments(expenses,debts,payments);
@@ -113,16 +113,19 @@
    ['Anh hoa don','Bang chi co duong dan anh trong Supabase private Storage; can tai anh rieng de sao luu anh offline.'],
    ['Bao mat','File chua ID va chi tiet tai chinh; bao quan can than.'],
    ['Khong phai dong bo','Sua file Excel KHONG thay doi website/Supabase.'],
-   ['Nhac quy','Khoan thanh toan du kien chi de du phong. Da coc/da tra KHONG tu tao chi phi hay giam tien trong quy. Khi thuc su chi, ghi them vao Khoan chi.']
+   ['Nhac quy','Khoan thanh toan du kien chi de du phong. Da coc/da tra KHONG tu tao chi phi hay giam tien trong quy. Khi thuc su chi, ghi them vao Khoan chi.'],
+   ['Hoan quy','Giao dich da hoan cho thanh vien. Ghi nhan nay KHONG tu giam so du trong bang Quỹ hoac tao khoan chi.']
   ];
   const reminderRows=[['ID','Noi dung','Tong phai tra','Da coc / da tra','Ngay den han','Can du phong','Ghi chu','Nguoi tao','Ngay tao']];
   reminders.forEach((item,i)=>{const row=i+2;reminderRows.push([item.id,item.title,number(item.total_amount),number(item.paid_amount),item.due_on||'',c(Math.max(0,number(item.total_amount)-number(item.paid_amount)),'MAX(0,C'+row+'-D'+row+')'),item.note||'',item.created_by||'',item.created_at||''])});
-  const json=JSON.stringify({trip,members,expenses,contributions,debts,payments,reminders,exported_at:new Date().toISOString()});
+  const refundRows=[['ID','ID chuyen','ID thanh vien','So tien hoan (VND)','Ngay chuyen','Ghi chu','Nguoi ghi','Luc ghi']];
+  refunds.forEach(p=>refundRows.push([p.id,p.trip_id,p.member_id,number(p.amount),p.paid_on||'',p.note||'',p.created_by||'',p.created_at||'']));
+  const json=JSON.stringify({trip,members,expenses,contributions,debts,payments,reminders,refunds,exported_at:new Date().toISOString()});
   const rawRows=[['Du lieu JSON (noi cac phan theo thu tu tu tren xuong)'],...Array.from({length:Math.ceil(json.length/30000)},(_,i)=>[json.slice(i*30000,(i+1)*30000)])];
   const sheets=[
    {name:S,rows:summary},{name:M,rows:memberRows},{name:E,rows:expenseRows},
    {name:C,rows:contributionRows},{name:D,rows:debtRows},{name:P,rows:paymentRows},
-   {name:'Goi y chuyen tien',rows:transferRows},{name:'Cong thuc',rows:notes},{name:'Du lieu goc JSON',rows:rawRows},{name:'Nhac quy',rows:reminderRows},{name:A,rows:allocationRows}
+   {name:'Goi y chuyen tien',rows:transferRows},{name:'Cong thuc',rows:notes},{name:'Du lieu goc JSON',rows:rawRows},{name:'Nhac quy',rows:reminderRows},{name:A,rows:allocationRows},{name:'Hoan quy',rows:refundRows}
   ];
   return makeXlsx(sheets);
  }

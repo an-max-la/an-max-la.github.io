@@ -1890,3 +1890,19 @@ select:hover{border-color:#cfc9ef}
  .category-dashboard-name,.category-dashboard-money{font-size:12px}
  .category-dashboard-row{column-gap:7px}
 }
+/* Refund payout confirmations: compact member-specific controls and clear payment status. */
+.closing-refund-tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}
+.closing-refund-tools button{min-height:42px}
+.closing-refunds-paid{background:#eaf7ef;color:#236b45}
+.closing-refunds-pending{background:#f6f1ff;color:#5b45ac}
+.closing-refund-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-end;min-width:0}
+.closing-refund-actions button{min-height:40px;white-space:nowrap;font-size:12px}
+.closing-refund-payment-status{display:inline-flex;align-items:center;align-self:flex-start;gap:4px;font-size:11px;font-weight:700;color:#975f18;background:#fff5e8;border-radius:40px;padding:5px 9px;margin-top:4px}
+.closing-refund-payment-status.paid{background:#e8f7ee;color:#257448}
+@media(max-width:540px){
+ .closing-refund-actions{width:100%;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap}
+ .closing-refund-actions button{min-height:42px}
+ .closing-refund-row{flex-wrap:wrap}
+ .closing-refund-member{flex:1 1 155px}
+ .closing-refunds-total{min-width:0}
+}

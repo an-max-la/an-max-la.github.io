@@ -2,6 +2,26 @@
 (function(){
 'use strict';
 const dictionary={
+"Chưa bật ghi hoàn quỹ":"Refund recording is not set up",
+"Không có tiền cần hoàn":"No refunds due",
+"Hoàn quỹ":"Fund refund",
+  "Đánh dấu đã hoàn tất cả": "Mark all as refunded",
+  "Chưa bật tính năng ghi hoàn quỹ. Host cần chạy trip_member_refunds.sql trong Supabase.": "Refund recording is not enabled. The host must run trip_member_refunds.sql in Supabase.",
+  "Đã hoàn thành viên": "Refunded to members",
+  "Còn phải hoàn": "Refunds remaining",
+  "Đang hoàn quỹ": "Refunds in progress",
+  "Đã hoàn tất": "All refunds completed",
+  "Cần đối soát:": "Review needed:",
+  "Chỉ đánh dấu đã hoàn sau khi thực sự chuyển tiền. Ghi nhận này không tạo khoản chi mới.": "Only mark a refund as paid after sending the money. Refund records are not new expenses.",
+  "Đã hoàn": "Refunded",
+  "Chưa hoàn": "Pending refund",
+  "Không có tiền hoàn": "No refund due",
+  "Đánh dấu đã hoàn": "Mark as paid",
+  "Ngày chuyển tiền": "Transfer date",
+  "Thành viên nhận hoàn": "Refund recipient",
+  "Số tiền hoàn quỹ": "Refund amount",
+  "Ghi nhận đã hoàn chỉ lưu trạng thái chuyển tiền thực tế; ứng dụng không tự chuyển khoản. Quỹ ban đầu hiện được giả định chia đều cho các thành viên; hãy kiểm tra nguồn đóng quỹ ban đầu trước khi hoàn. Khi có người không tham gia chi phí": "A refund record only confirms an actual transfer; the app never sends money. The opening fund is assumed to belong equally to all members; verify ownership before refunding. When a member did not share an expense",
+
   "Chi tiêu theo danh mục":"Spending by category",
   "Tỷ trọng chi phí của cả chuyến, tính theo VND.":"Share of total trip expenses, in VND.",
   "Xem chi tiêu":"View expenses",
