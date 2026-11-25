@@ -29,10 +29,10 @@ test('date field has same fixed height and constrained width as expense modal se
  assert.doesNotMatch(css,/#expenseDialog input\[type="date"\]\{[^}]*appearance:none/);
 });
 
-test('native date input is clipped to its own field and centered without replacing the picker',()=>{
+test('native date input is clipped to its own field with left-aligned text without replacing the picker',()=>{
  const css=read('styles.css'),html=read('index.html');
  assert.match(html,/class="expense-date-control"><input id="expenseDate" type="date" required>/);
  assert.match(css,/#expenseDialog \.expense-date-control\{[^}]*position:relative;[^}]*width:100%;max-width:100%;min-width:0;height:46px;[^}]*overflow:hidden/);
- assert.match(css,/#expenseDialog #expenseDate\{[^}]*position:absolute;inset:0;[^}]*text-align:center/);
- assert.match(css,/#expenseDialog #expenseDate::-webkit-date-and-time-value\{[^}]*justify-content:center;[^}]*text-align:center/);
+ assert.match(css,/#expenseDialog #expenseDate\{[^}]*position:absolute;inset:0;[^}]*text-align:left/);
+ assert.match(css,/#expenseDialog #expenseDate::-webkit-date-and-time-value\{[^}]*justify-content:flex-start;[^}]*text-align:left/);
 });
