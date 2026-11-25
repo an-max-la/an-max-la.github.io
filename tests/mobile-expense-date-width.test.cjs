@@ -18,3 +18,13 @@ test('mobile native date input cannot force its parent wider than the form',()=>
  assert.doesNotMatch(css,/#expenseDialog #expenseDate\{[^}]*appearance:none/);
  assert.match(read('sw.js'),/triptogether-v\d+/);
 });
+
+test('date field has same fixed height and constrained width as expense modal selects',()=>{
+ const css=read('styles.css');
+ assert.match(css,/#expenseDialog \.formgrid input:not\(\[type="checkbox"\]\),\s*#expenseDialog \.formgrid select\{/);
+ assert.match(css,/#expenseDialog \.formgrid select\{[^}]*inline-size:100%;min-inline-size:0;max-inline-size:100%;[^}]*block-size:46px;min-block-size:46px;max-block-size:46px;/);
+ assert.match(css,/#expenseDialog input\[type="date"\]\{[^}]*inline-size:100%;width:100%;min-inline-size:0;min-width:0;max-inline-size:100%;[^}]*block-size:46px;height:46px;min-block-size:46px;max-block-size:46px;/);
+ assert.match(css,/#expenseDialog input\[type="date"\]::-webkit-date-and-time-value\{/);
+ assert.match(css,/#expenseDialog input\[type="date"\]::-webkit-datetime-edit\{/);
+ assert.doesNotMatch(css,/#expenseDialog input\[type="date"\]\{[^}]*appearance:none/);
+});
