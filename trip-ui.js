@@ -71,7 +71,8 @@ const AUDIT_FIELDS={
  contributions:{amount:'Số tiền',payer_id:'Người đóng',paid_on:'Ngày đóng',note:'Ghi chú'},
  member_debts:{amount:'Số tiền',debtor_id:'Người nợ',creditor_id:'Người cho vay',incurred_on:'Ngày ghi nợ',is_settled:'Đã thanh toán',settled_at:'Thời điểm thanh toán',note:'Ghi chú'},
  trip_payments:{amount:'Số tiền',expense_id:'Khoản chi liên quan',debt_id:'Khoản nợ liên quan',paid_on:'Ngày thanh toán',note:'Ghi chú'},
- trip_fund_reminders:{title:'Nội dung dự phòng',total_amount:'Tổng tiền phải trả',paid_amount:'Đã cọc / đã trả',due_on:'Hạn thanh toán',note:'Ghi chú'}
+ trip_fund_reminders:{title:'Nội dung dự phòng',total_amount:'Tổng tiền phải trả',paid_amount:'Đã cọc / đã trả',due_on:'Hạn thanh toán',note:'Ghi chú'},
+ trip_member_refunds:{member_id:'Thành viên nhận hoàn',amount:'Số tiền hoàn quỹ',paid_on:'Ngày chuyển tiền',note:'Ghi chú'}
 };
 function activityChanges(event){
  const before=event.before_data||{},after=event.after_data||{};
