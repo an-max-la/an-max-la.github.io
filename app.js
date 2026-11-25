@@ -543,7 +543,7 @@ function render(){
   }).join('');
   categoryBody.innerHTML=`<div class="category-dashboard-chart">
     <div class="category-dashboard-donut" role="img" aria-label="Phân bổ chi tiêu theo danh mục" style="background:${chartStyle}">
-      <div class="category-dashboard-donut-center"><small>Tổng chi</small><strong>${money(categoryReport.total)}</strong><small>${categoryReport.count} khoản chi</small></div>
+      <div class="category-dashboard-donut-center"><small>Tổng chi</small><strong>${money(categoryReport.total)}</strong></div>
     </div>
    </div><div class="category-dashboard-breakdown">${summary}</div>`;
  }
