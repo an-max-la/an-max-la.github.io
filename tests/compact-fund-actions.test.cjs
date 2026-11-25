@@ -4,19 +4,21 @@ const fs=require('node:fs');
 const path=require('node:path');
 const read=name=>fs.readFileSync(path.join(__dirname,'..',name),'utf8');
 
-test('fund reminder and contribution actions use decorative SVGs with meaningful accessible names',()=>{
+test('fund reminder buttons retain icon actions while contribution actions use member-style settings menu',()=>{
  const app=read('app.js');
- for(const field of ['edit-fund-reminder','delete-fund-reminder','edit-contribution','delete-contribution']){
-  const button=app.match(new RegExp('<button[^>]*class="[^"]*'+field+'[^"]*"[^>]*>','g'));
-  assert.ok(button&&button.length===1,'Expected exactly one action button: '+field);
-  assert.match(button[0],/aria-label="[^"]+"/);
-  assert.match(button[0],/title="[^"]+"/);
-  assert.match(button[0],/type="button"/);
+ for(const action of ['edit-fund-reminder','delete-fund-reminder']){
+  assert.match(app,new RegExp('<button[^>]*class="[^"]*'+action+'[^"]*"[^>]*aria-label="[^"]+"'));
  }
  assert.match(app,/const FUND_EDIT_ICON='<svg[^']+aria-hidden="true"/);
  assert.match(app,/const FUND_REMOVE_ICON='<svg[^']+aria-hidden="true"/);
- assert.match(app,/>\$\{FUND_EDIT_ICON\}<\/button>/);
- assert.match(app,/>\$\{FUND_REMOVE_ICON\}<\/button>/);
+ assert.match(app,/const FUND_SETTINGS_ICON='<svg[^']+aria-hidden="true"/);
+ assert.match(app,/class="member-actions-menu contribution-actions-menu"/);
+ assert.match(app,/class="member-actions-dropdown contribution-actions-dropdown"/);
+ for(const action of ['edit-contribution','delete-contribution']){
+  assert.match(app,new RegExp('class="'+action+'"[^>]*aria-label="[^"]+"[^>]*title="[^"]+"'));
+ }
+ assert.match(app,/menu\.open=!menu\.open/);
+ assert.match(app,/contribution-menu-open/);
 });
 test('fund action handlers and deletion confirmation remain in place',()=>{
  const app=read('app.js');
