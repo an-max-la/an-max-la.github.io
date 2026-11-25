@@ -518,6 +518,35 @@ function render(){
  const enriched=window.TripTogetherFinance.applyPayments(expenses,debts,payments);
  const displayExpenses=enriched.expenses,displayDebts=enriched.debts;
  const {spent,additional,initial,fund,dueToMembers,cashFund,actualFund}=window.TripTogetherFinance.calculateTotals(trip,displayExpenses,contributions);
+ // Expense category dashboard uses ALL recorded trip expenses, not the filtered list.
+ // The stored amount is already VND even for foreign-currency purchases.
+ const categoryReport=window.TripTogetherCategoryDashboard.summarize(displayExpenses);
+ const categoryColors=['#6657d9','#1b9d99','#e9a257','#ec789c','#6a94dc','#8d75c6','#67a66a','#c08a65'];
+ const categoryBody=$('categoryDashboardContent');
+ if(!categoryReport.count){
+  categoryBody.innerHTML='<p class="muted small category-dashboard-empty">Chưa có khoản chi để thống kê.</p>';
+ }else{
+  let consumed=0;
+  const slices=categoryReport.rows.map((item,index)=>{
+   const start=consumed;consumed+=item.share;
+   return categoryColors[index%categoryColors.length]+' '+start.toFixed(5)+'% '+consumed.toFixed(5)+'%';
+  });
+  const chartStyle='conic-gradient('+slices.join(',')+')';
+  const summary=categoryReport.rows.map((item,index)=>{
+   const label=categoryLabel(item.key),pct=item.share.toLocaleString('vi-VN',{maximumFractionDigits:1});
+   return `<div class="category-dashboard-row">
+    <span class="category-dashboard-name"><span class="category-dashboard-swatch" style="--category-color:${categoryColors[index%categoryColors.length]}" aria-hidden="true"></span><span>${esc(label)}</span></span>
+    <strong class="category-dashboard-money">${money(item.amount)}</strong>
+    <div class="category-dashboard-bar" role="meter" aria-label="${esc(label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${item.share.toFixed(2)}"><span style="width:${item.share.toFixed(5)}%;--category-color:${categoryColors[index%categoryColors.length]}"></span></div>
+    <span class="category-dashboard-percent">${pct}%</span>
+   </div>`;
+  }).join('');
+  categoryBody.innerHTML=`<div class="category-dashboard-chart">
+    <div class="category-dashboard-donut" role="img" aria-label="Phân bổ chi tiêu theo danh mục" style="background:${chartStyle}">
+      <div class="category-dashboard-donut-center"><small>Tổng chi</small><strong>${money(categoryReport.total)}</strong><small>${categoryReport.count} khoản chi</small></div>
+    </div>
+   </div><div class="category-dashboard-breakdown">${summary}</div>`;
+ }
  const reminderMath=window.TripTogetherFundReminders;
  const remainingReminder=reminderMath.totals(fundReminders,actualFund);
  const reminderPanel=$('fundReminderList'),reminderOverview=$('fundReminderOverview');
