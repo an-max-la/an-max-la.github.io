@@ -67,3 +67,12 @@ test('trip UI shows per-member refund details, warns before payout and never pos
  const block=app.slice(app.indexOf('const closeReport='),app.indexOf('const expenseTransfers='));
  assert.doesNotMatch(block,/db\.from\(|db\.rpc\(/);
 });
+
+test('missing split participant and orphan contributions block unsafe closure',()=>{
+ const report=F.calculateClosingRefunds({initial_fund:100000},members,[
+   exp(30000,{mode:'equal',weights:{a:1,'missing-member':1}})
+ ],[contrib('missing-member',20000)]);
+ assert.equal(report.canRefund,false);
+ assert.match(report.issues.join(' '),/phần chia không hợp lệ/);
+ assert.match(report.issues.join(' '),/đóng quỹ của thành viên không còn/);
+});
