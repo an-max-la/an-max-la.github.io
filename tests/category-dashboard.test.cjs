@@ -48,3 +48,22 @@ test('accessible responsive chart and empty state',()=>{
  assert.match(app,/role="meter"/);
  assert.match(app,/Chưa có khoản chi để thống kê/);
 });
+
+test('donut keeps a thin ring and an unbroken VND total, without expense count',()=>{
+ const app=read('app.js'),css=read('styles.css');
+ assert.match(app,/<div class="category-dashboard-donut-center"><small>Tổng chi<\/small><strong>\$\{money\(categoryReport.total\)\}<\/strong><\/div>/);
+ assert.doesNotMatch(app,/categoryReport\.count\} khoản chi/);
+ assert.match(css,/\.category-dashboard-donut\{[^}]*padding:11%/);
+ assert.match(css,/\.category-dashboard-donut-center strong\{[^}]*white-space:nowrap/);
+ assert.match(css,/\.category-dashboard-donut-center strong\{[^}]*font-variant-numeric:tabular-nums/);
+ assert.match(css,/@media\(max-width:700px\)[\s\S]*?\.category-dashboard-donut-center strong\{font-size:clamp\(11px,3vw,15px\)\}/);
+});
+
+test('category dashboard precedes recent expense cards on trip overview',()=>{
+ const html=read('index.html');
+ const category=html.indexOf('id="categorySpendingDashboard"');
+ const recent=html.indexOf('Khoản chi gần đây');
+ const activity=html.indexOf('id="activityPanel"');
+ assert.ok(category>=0&&category<recent&&recent<activity);
+ assert.equal((html.match(/id="categorySpendingDashboard"/g)||[]).length,1);
+});
