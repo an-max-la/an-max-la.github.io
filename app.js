@@ -697,7 +697,7 @@ function render(){
   '<div class="closing-refunds-total"><span>Số dư dự kiến có thể hoàn</span><strong>'+money(closeReport.expectedRemaining)+'</strong></div>'+
   '<div class="closing-refunds-total closing-refunds-paid"><span>Đã hoàn thành viên</span><strong>'+money(refundLedger.paidTotal)+'</strong></div>'+
   '<div class="closing-refunds-total closing-refunds-pending"><span>Còn phải hoàn</span><strong>'+money(refundLedger.remainingTotal)+'</strong></div>'+
-  '<span class="closing-refunds-state '+(warnings.length?'pending':'ready')+'">'+(warnings.length?'Cần kiểm tra trước khi hoàn quỹ':pending.length?'Đang hoàn quỹ':'Đã hoàn tất')+'</span>';
+  '<span class="closing-refunds-state '+(warnings.length?'pending':'ready')+'">'+(warnings.length?'Cần kiểm tra trước khi hoàn quỹ':!memberRefundsAvailable?'Chưa bật ghi hoàn quỹ':pending.length?'Đang hoàn quỹ':refundLedger.paidTotal>0?'Đã hoàn tất':'Không có tiền cần hoàn')+'</span>';
  $('closingRefundWarnings').innerHTML=warnings.length
   ?'<strong>Cần đối soát:</strong><ul>'+warnings.map(issue=>'<li>'+esc(issue)+'</li>').join('')+'</ul>'
   :'<p class="muted small">Chỉ đánh dấu đã hoàn sau khi thực sự chuyển tiền. Ghi nhận này không tạo khoản chi mới.</p>';
@@ -779,7 +779,7 @@ function render(){
  }).join(''):'<p class="muted small">Chưa có thanh toán nào.</p>';
  activityPanel.classList.toggle('hidden',readOnly);
  if(!readOnly){
-  const entityNames={expenses:'Khoản chi',contributions:'Đóng quỹ',member_debts:'Nợ riêng',trip_payments:'Thanh toán',trip_fund_reminders:'Nhắc dự phòng quỹ'};
+  const entityNames={expenses:'Khoản chi',contributions:'Đóng quỹ',member_debts:'Nợ riêng',trip_payments:'Thanh toán',trip_fund_reminders:'Nhắc dự phòng quỹ',trip_member_refunds:'Hoàn quỹ'};
   const actionNames={INSERT:'Đã thêm',UPDATE:'Đã sửa',DELETE:'Đã xóa'};
   activityList.innerHTML=activityEvents.length?window.TripTogetherUI.sortByDate(activityEvents,'recorded_at',$('activityDateSort').value).map(event=>{
    const d=event.after_data||event.before_data||{},entity=entityNames[event.source_table]||event.source_table;
