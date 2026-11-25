@@ -652,28 +652,69 @@ function render(){
   permissionList.innerHTML='<p class="muted small">Chỉ thành viên đã liên kết tài khoản email mới hiện ở đây. Host có thể gắn email cho thành viên thủ công trong mục Sửa.</p>'+(permissionView.rows.length?permissionView.rows.map(r=>`<div class="member-permission-row"><span><b>${esc(r.name)}</b><small class="member-permission-status">${r.status}</small></span><button class="${r.canEdit?'secondary':'primary'} compact member-edit-toggle" data-user-id="${esc(r.userId)}" data-allow="${r.allow}">${r.actionLabel}</button></div>`).join(''):'<p class="muted small">Chưa có thành viên nào đã liên kết tài khoản.</p>');
   permissionList.querySelectorAll('.member-edit-toggle').forEach(button=>button.onclick=()=>toggleMemberEdit(button));
  }
- // Closing refund preview is calculated independently from proposed fund transfers.
- // No payout can be sent or saved here: the Host checks the figures before paying.
+
+ // Refund records are separate from expenses; these buttons never transfer funds.
  const closeReport=window.TripTogetherFinance.calculateClosingRefunds(trip,members,displayExpenses,contributions,{
   reminders:fundRemindersAvailable?fundReminders:[],debts:displayDebts
  });
  if(!fundRemindersAvailable)closeReport.issues.push('Chưa thể kiểm tra các khoản dự phòng; vui lòng cấu hình nhắc dự phòng quỹ.');
  closeReport.canRefund=closeReport.issues.length===0;
- $('closingRefundSummary').innerHTML=`<div class="closing-refunds-total"><span>Số dư dự kiến có thể hoàn</span><strong>${money(closeReport.expectedRemaining)}</strong></div><span class="closing-refunds-state ${closeReport.canRefund?'ready':'pending'}">${closeReport.canRefund?'Đã đủ điều kiện đối soát':'Cần kiểm tra trước khi hoàn quỹ'}</span>`;
- $('closingRefundWarnings').innerHTML=closeReport.issues.length
-  ?'<strong>Chưa nên chuyển tiền:</strong><ul>'+closeReport.issues.map(issue=>'<li>'+esc(issue)+'</li>').join('')+'</ul>'
-  :'<p class="muted small">Không phát hiện khoản chưa đối soát. Hãy kiểm tra số thực tế trong quỹ trước khi chuyển tiền.</p>';
- $('closingRefundList').innerHTML=closeReport.rows.length?closeReport.rows.map(person=>`
-  <div class="closing-refund-row">
-   <div class="closing-refund-member"><strong>${esc(person.name)}</strong><small>Quỹ đầu chuyến: ${money(person.opening)} · Đã đóng: ${money(person.contributed)}</small><small>Phần chi thực tế: ${money(person.spent)}</small></div>
-   <div class="closing-refund-amount ${person.refund<0?'owes':''}"><strong>${money(Math.abs(person.refund))}</strong><small>${person.refund<0?'Cần đóng thêm':'Dự kiến nhận lại'}</small></div>
-  </div>`).join(''):'<p class="muted small">Chưa có thành viên để đối soát.</p>';
- $('copyClosingRefunds').disabled=!closeReport.rows.length||!closeReport.canRefund;
+ const refundLedger=window.TripTogetherRefundLedger.reconcile(closeReport,memberRefunds);
+ const warnings=[...closeReport.issues,...refundLedger.problems];
+ const allowed=canEdit&&!readOnly&&memberRefundsAvailable&&!warnings.length;
+ const pending=refundLedger.rows.filter(p=>p.planned>0&&!p.paidRecord);
+ $('refundLedgerSetup').classList.toggle('hidden',readOnly||memberRefundsAvailable);
+ $('closingRefundSummary').innerHTML=
+  '<div class="closing-refunds-total"><span>Số dư dự kiến có thể hoàn</span><strong>'+money(closeReport.expectedRemaining)+'</strong></div>'+
+  '<div class="closing-refunds-total closing-refunds-paid"><span>Đã hoàn thành viên</span><strong>'+money(refundLedger.paidTotal)+'</strong></div>'+
+  '<div class="closing-refunds-total closing-refunds-pending"><span>Còn phải hoàn</span><strong>'+money(refundLedger.remainingTotal)+'</strong></div>'+
+  '<span class="closing-refunds-state '+(warnings.length?'pending':'ready')+'">'+(warnings.length?'Cần kiểm tra trước khi hoàn quỹ':pending.length?'Đang hoàn quỹ':'Đã hoàn tất')+'</span>';
+ $('closingRefundWarnings').innerHTML=warnings.length
+  ?'<strong>Cần đối soát:</strong><ul>'+warnings.map(issue=>'<li>'+esc(issue)+'</li>').join('')+'</ul>'
+  :'<p class="muted small">Chỉ đánh dấu đã hoàn sau khi thực sự chuyển tiền. Ghi nhận này không tạo khoản chi mới.</p>';
+ $('markAllRefundsPaid').classList.toggle('hidden',readOnly||!canEdit||!memberRefundsAvailable);
+ $('markAllRefundsPaid').disabled=!allowed||!pending.length;
+ $('closingRefundList').innerHTML=refundLedger.rows.length?refundLedger.rows.map(person=>{
+  const paid=!!person.paidRecord,eligible=person.planned>0;
+  const state=paid?'Đã hoàn '+fmtDate(person.paidRecord.paid_on):eligible?'Chưa hoàn':'Không có tiền hoàn';
+  const buttons=!readOnly&&canEdit&&memberRefundsAvailable?(paid
+   ?'<button class="secondary compact undo-member-refund" type="button" data-id="'+esc(person.paidRecord.id)+'" data-member="'+esc(person.name)+'" aria-label="Hoàn tác hoàn quỹ cho '+esc(person.name)+'">Hoàn tác</button>'
+   :eligible?'<button class="secondary compact mark-member-refund" type="button" data-member-id="'+esc(person.id)+'" '+(allowed?'':'disabled')+' aria-label="Đánh dấu đã hoàn quỹ cho '+esc(person.name)+'">Đánh dấu đã hoàn</button>':''):'';
+  return '<div class="closing-refund-row"><div class="closing-refund-member"><strong>'+esc(person.name)+'</strong>'+
+   '<small>Quỹ đầu chuyến: '+money(person.opening)+' · Đã đóng: '+money(person.contributed)+'</small>'+
+   '<small>Phần chi thực tế: '+money(person.spent)+'</small>'+
+   '<span class="closing-refund-payment-status '+(paid?'paid':'')+'">'+esc(state)+(paid?' · '+money(person.paidRecord.amount):'')+'</span></div>'+
+   '<div class="closing-refund-actions"><div class="closing-refund-amount '+(person.refund<0?'owes':'')+'"><strong>'+money(Math.abs(person.refund))+'</strong><small>'+(person.refund<0?'Cần đóng thêm':'Dự kiến nhận lại')+'</small></div>'+buttons+'</div></div>';
+ }).join(''):'<p class="muted small">Chưa có thành viên để đối soát.</p>';
+ const recordRefund=async people=>{
+  if(!trip||!user||!canEdit||readOnly||!memberRefundsAvailable||!allowed||!people.length)return;
+  const tripId=trip.id,amount=people.reduce((sum,p)=>sum+p.planned,0);
+  const whom=people.length===1?people[0].name:people.length+' thành viên';
+  if(!localizedConfirm('Xác nhận ĐÃ CHUYỂN '+money(amount)+' hoàn quỹ cho '+whom+'? Ứng dụng chỉ ghi nhận khoản chuyển tiền thực tế.'))return;
+  const entries=people.map(p=>({trip_id:tripId,member_id:p.id,amount:p.planned,paid_on:dateToday(),created_by:user.id}));
+  const {error}=await db.from('trip_member_refunds').insert(entries);
+  if(error){localizedAlert('Không thể ghi nhận hoàn quỹ: '+error.message);return}
+  if(trip?.id===tripId)await refresh();
+ };
+ $('closingRefundList').querySelectorAll('.mark-member-refund').forEach(button=>button.onclick=()=>recordRefund(pending.filter(p=>p.id===button.dataset.memberId)));
+ $('closingRefundList').querySelectorAll('.undo-member-refund').forEach(button=>button.onclick=async()=>{
+  if(!canEdit||readOnly||!memberRefundsAvailable)return;
+  if(!localizedConfirm('Hoàn tác ghi nhận đã hoàn quỹ cho '+button.dataset.member+'? Thao tác không thu hồi chuyển khoản thực tế.'))return;
+  await withButtonLoading(button,'Đang hoàn tác…',async()=>{
+   const tripId=trip.id;
+   const {error}=await db.from('trip_member_refunds').delete().eq('id',button.dataset.id).eq('trip_id',tripId);
+   if(error){localizedAlert('Không thể hoàn tác: '+error.message);return}
+   if(trip?.id===tripId)await refresh();
+  });
+ });
+ $('markAllRefundsPaid').onclick=()=>recordRefund(pending);
+ $('copyClosingRefunds').disabled=!closeReport.rows.length||warnings.length>0;
  $('copyClosingRefunds').onclick=async()=>{
-  if(!closeReport.canRefund)return;
+  if(warnings.length)return;
   const lines=['HOÀN QUỸ CUỐI CHUYẾN — '+trip.name,'Số dư dự kiến: '+money(closeReport.expectedRemaining),
-   ...closeReport.rows.map(person=>person.name+': '+(person.refund<0?'cần đóng thêm ':'nhận lại ')+money(Math.abs(person.refund))),
-   'Chỉ là dự kiến; chưa ghi nhận hay chuyển bất kỳ khoản hoàn quỹ nào.'];
+   'Đã hoàn: '+money(refundLedger.paidTotal)+' · Còn phải hoàn: '+money(refundLedger.remainingTotal),
+   ...refundLedger.rows.map(person=>person.name+': '+(person.paidRecord?'đã hoàn ':'cần hoàn ')+money(Math.max(0,person.refund))),
+   'Chỉ ghi nhận hoàn quỹ sau khi thực sự chuyển tiền.'];
   try{await navigator.clipboard.writeText(lines.join('\n'));status('Đã sao chép bảng hoàn quỹ')}
   catch(error){localizedAlert('Không thể sao chép bảng hoàn quỹ trên trình duyệt này.')}
  };
