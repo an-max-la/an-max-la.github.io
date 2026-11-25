@@ -18,6 +18,15 @@ const dictionary={
   "Thành viên nhận hoàn": "Refund recipient",
   "Số tiền hoàn quỹ": "Refund amount",
   "Ghi nhận đã hoàn chỉ lưu trạng thái chuyển tiền thực tế; ứng dụng không tự chuyển khoản. Quỹ ban đầu hiện được giả định chia đều cho các thành viên; hãy kiểm tra nguồn đóng quỹ ban đầu trước khi hoàn. Khi có người không tham gia chi phí": "A refund record only confirms an actual transfer; the app never sends money. The opening fund is assumed to belong equally to all members; verify ownership before refunding. When a member did not share an expense",
+
+  "Chi tiêu theo danh mục":"Spending by category",
+  "Tỷ trọng chi phí của cả chuyến, tính theo VND.":"Share of total trip expenses, in VND.",
+  "Xem chi tiêu":"View expenses",
+  "Chưa có khoản chi để thống kê.":"No expenses to summarize yet.",
+  "Phân bổ chi tiêu theo danh mục":"Spending distribution by category",
+  "Tổng chi":"Total spent",
+  "khoản chi":"expenses",
+
   "Hoàn quỹ cuối chuyến":"End-of-trip fund refunds",
   "Tính số tiền mỗi người được nhận lại dựa trên tiền đã đóng và các khoản chi họ thực sự tham gia.":"Calculate each member's refund from contributions and the expenses they actually shared.",
   "Sao chép bảng hoàn quỹ":"Copy refund plan",
