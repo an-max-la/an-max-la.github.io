@@ -105,6 +105,13 @@
   </div>
   <section id="ttOverview" class="tt-overview" aria-label="Tổng quan chuyến đi">
     <div id="fundReminderOverview" class="fund-reminder-overview hidden" role="status"></div>
+    <section id="categorySpendingDashboard" class="tt-overview-card category-dashboard" aria-labelledby="categoryDashboardTitle">
+      <div class="tt-panel-head category-dashboard-head">
+        <div><h2 id="categoryDashboardTitle">Chi tiêu theo danh mục</h2><p class="muted small">Tỷ trọng chi phí của cả chuyến, tính theo VND.</p></div>
+        <button class="tt-text-link" type="button" data-shell-view="expenses">Xem chi tiêu <svg class="tt-icon tt-icon-after" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <div id="categoryDashboardContent" class="category-dashboard-content" aria-live="polite"></div>
+    </section>
     <div class="tt-overview-grid">
       <article class="tt-overview-card">
         <div class="tt-panel-head"><h2>Khoản chi gần đây</h2><button class="tt-text-link" type="button" data-shell-view="expenses">Xem tất cả <svg class="tt-icon tt-icon-after" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
@@ -115,13 +122,6 @@
         <article class="tt-overview-card"><div class="tt-panel-head"><h2>Tình hình quỹ</h2><button class="tt-text-link" type="button" data-shell-view="fund">Đóng quỹ <svg class="tt-icon tt-icon-after" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div><p class="muted small">Quỹ còn lại sau khi trừ khoản cần hoàn cho thành viên.</p><strong class="tt-fund-highlight" id="ttOverviewNetFund">0 ₫</strong></article>
       </div>
     </div>
-    <section id="categorySpendingDashboard" class="tt-overview-card category-dashboard" aria-labelledby="categoryDashboardTitle">
-      <div class="tt-panel-head category-dashboard-head">
-        <div><h2 id="categoryDashboardTitle">Chi tiêu theo danh mục</h2><p class="muted small">Tỷ trọng chi phí của cả chuyến, tính theo VND.</p></div>
-        <button class="tt-text-link" type="button" data-shell-view="expenses">Xem chi tiêu <svg class="tt-icon tt-icon-after" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-      </div>
-      <div id="categoryDashboardContent" class="category-dashboard-content" aria-live="polite"></div>
-    </section>
     <section id="activityPanel" class="tt-overview-card tt-activity-card" aria-labelledby="activityTitle">
       <div class="tt-activity-head">
         <span class="tt-activity-icon" aria-hidden="true"><svg class="tt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3"/></svg></span>
