@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#6559e8"><meta name="description" content="Quản lý chi tiêu và quỹ chung cho chuyến đi">
 <link rel="stylesheet" href="airport-background.css?v=1">
 <link rel="manifest" href="manifest.webmanifest?v=3"><link rel="icon" href="triptogether-purple-icon.png?v=3" type="image/png" sizes="160x160"><link rel="apple-touch-icon" href="triptogether-purple-icon.png?v=3">
-<title>TripTogether</title><link rel="stylesheet" href="styles.css?v=96">
+<title>TripTogether</title><link rel="stylesheet" href="styles.css?v=97">
 </head>
 <body>
 <div class="airport-scene" aria-hidden="true">
@@ -167,8 +167,12 @@
       </div>
       <div id="closingRefundSummary" class="closing-refunds-summary" aria-live="polite"></div>
       <div id="closingRefundWarnings" class="closing-refunds-warnings" role="status"></div>
+      <div class="closing-refund-tools">
+        <button id="markAllRefundsPaid" class="secondary compact hidden" type="button">Đánh dấu đã hoàn tất cả</button>
+        <span id="refundLedgerSetup" class="muted small hidden">Chưa bật tính năng ghi hoàn quỹ. Host cần chạy trip_member_refunds.sql trong Supabase.</span>
+      </div>
       <div id="closingRefundList" class="closing-refunds-list" aria-live="polite"></div>
-      <p class="muted small closing-refunds-note">Bảng dự kiến, chưa ghi nhận chuyển tiền. Quỹ ban đầu hiện được giả định chia đều cho các thành viên; hãy kiểm tra nguồn đóng quỹ ban đầu trước khi hoàn. Khi có người không tham gia chi phí (ví dụ không uống cà phê), chọn <strong>Chia cho → Một số người</strong> khi ghi khoản chi.</p>
+      <p class="muted small closing-refunds-note">Ghi nhận đã hoàn chỉ lưu trạng thái chuyển tiền thực tế; ứng dụng không tự chuyển khoản. Quỹ ban đầu hiện được giả định chia đều cho các thành viên; hãy kiểm tra nguồn đóng quỹ ban đầu trước khi hoàn. Khi có người không tham gia chi phí (ví dụ không uống cà phê), chọn <strong>Chia cho → Một số người</strong> khi ghi khoản chi.</p>
     </section>
   </section>
   <section id="peopleTab" class="tabbody hidden">
@@ -318,7 +322,8 @@ window.__supabaseSdkReady=new Promise(resolve=>{const sources=['https://cdn.jsde
 <script src="receipts.js?v=1"></script>
 <script src="excel-backup.js?v=5"></script>
 <script src="fund-reminders.js?v=2"></script>
-<script src="app.js?v=93"></script>
+<script src="refund-ledger.js?v=1"></script>
+<script src="app.js?v=94"></script>
 <script>
 /* Boot guard: if app.js failed to load or crashed before init() (e.g. an outdated cached page running
  * newer scripts), clear the offline cache and reload once instead of spinning forever. */
