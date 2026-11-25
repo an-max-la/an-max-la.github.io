@@ -9,6 +9,7 @@ const dateToday = () => window.TripTogetherFinance.vietnamDate();
 let db, user, trip, members=[], expenses=[], contributions=[], debts=[], channel, readOnly=false, canEdit=false, editPermissionsReady=false, sharedCode=null, sharedPasscode=null, viewerTimer=null;
 let editRequests=[], editRequestsAvailable=false, editRequestTimer=null;
 let fundReminders=[],fundRemindersAvailable=false;
+let memberRefunds=[],memberRefundsAvailable=false;
 // Multi-currency needs expense_currency.sql; until it is installed the app stays VND-only.
 let multiCurrencyAvailable=false;
 // Uneven splits need expense_splits.sql; until then every expense is shared equally (old behaviour).
@@ -356,7 +357,7 @@ async function openSharedTrip(code){
   if(access.joined){await joinTrip(data.trip.id,false);return}
   const ledger=await db.rpc('get_shared_trip_payments',{p_invite_code:code});
   if(ledger.error)throw ledger.error;
-  ++refreshSequence;readOnly=true;sharedCode=code;sharedPasscode=null;trip=data.trip;members=data.members||[];expenses=data.expenses||[];contributions=data.contributions||[];debts=data.debts||[];payments=ledger.data||[];activityEvents=[];fundReminders=[];fundRemindersAvailable=false;render();await showTrip();if(viewerTimer)clearInterval(viewerTimer);viewerTimer=setInterval(()=>{if(readOnly&&trip)void refresh()},20000)
+  ++refreshSequence;readOnly=true;sharedCode=code;sharedPasscode=null;trip=data.trip;members=data.members||[];expenses=data.expenses||[];contributions=data.contributions||[];debts=data.debts||[];payments=ledger.data||[];activityEvents=[];fundReminders=[];fundRemindersAvailable=false;memberRefunds=[];memberRefundsAvailable=false;render();await showTrip();if(viewerTimer)clearInterval(viewerTimer);viewerTimer=setInterval(()=>{if(readOnly&&trip)void refresh()},20000)
  }catch(error){localizedAlert('Không thể mở chuyến đi. '+error.message)}finally{pageLoading(false)}
 }
 // A private invitation link allows viewing, never permission to edit.
@@ -413,7 +414,7 @@ async function joinTrip(id,ask=true){
   const {data:tdata,error}=await db.from('trips').select('id,invite_code,name,initial_fund,created_by,created_at').eq('id',tripId).single();
   if(error){localizedAlert('Không tìm thấy chuyến đi hoặc link không hợp lệ. '+error.message);return}
   if(channel){await db.removeChannel(channel);channel=null}
-  payments=[];activityEvents=[];fundReminders=[];fundRemindersAvailable=false;memberInviteEmails=[];
+  payments=[];activityEvents=[];fundReminders=[];fundRemindersAvailable=false;memberRefunds=[];memberRefundsAvailable=false;memberInviteEmails=[];
   trip=tdata;await refresh();await showTrip();
   // The saved-trip list is hidden while a trip is open: refresh it in the background, never block opening.
   void loadMyTrips();
@@ -425,6 +426,7 @@ async function joinTrip(id,ask=true){
    .on('postgres_changes',{event:'*',schema:'public',table:'expenses',filter:'trip_id=eq.'+tripId},watchChanges)
    .on('postgres_changes',{event:'*',schema:'public',table:'contributions',filter:'trip_id=eq.'+tripId},watchChanges)
    .on('postgres_changes',{event:'*',schema:'public',table:'trip_fund_reminders',filter:'trip_id=eq.'+tripId},watchChanges)
+    .on('postgres_changes',{event:'*',schema:'public',table:'trip_member_refunds',filter:'trip_id=eq.'+tripId},watchChanges)
    .on('postgres_changes',{event:'*',schema:'public',table:'members',filter:'trip_id=eq.'+tripId},watchChanges)
    .on('postgres_changes',{event:'*',schema:'public',table:'member_debts',filter:'trip_id=eq.'+tripId},watchChanges)
    .subscribe(state=>{
@@ -452,10 +454,10 @@ async function refresh(){
    if(tripReply.error||!tripReply.data?.trip||ledgerReply.error){status('Không thể cập nhật');return}
    const data=tripReply.data;
    trip=data.trip;members=data.members||[];expenses=data.expenses||[];contributions=data.contributions||[];debts=data.debts||[];
-   payments=ledgerReply.data||[];activityEvents=[];
+   payments=ledgerReply.data||[];activityEvents=[];memberRefunds=[];memberRefundsAvailable=false;
    render();status('Chỉ xem');return;
   }
-  const [a,b,c,d,requests,ledger,history,invites,reminderReply,currencyProbe,splitProbe]=await Promise.all([
+  const [a,b,c,d,requests,ledger,history,invites,reminderReply,currencyProbe,splitProbe,refundReply]=await Promise.all([
    db.from('members').select('*').eq('trip_id',tripId).order('created_at').order('user_id'),
    db.from('expenses').select('*').eq('trip_id',tripId).order('spent_on',{ascending:false}),
    db.from('contributions').select('*').eq('trip_id',tripId).order('paid_on',{ascending:false}),
@@ -467,7 +469,8 @@ async function refresh(){
     db.from('trip_fund_reminders').select('*').eq('trip_id',tripId).order('created_at',{ascending:false}),
    // Schema probes: once a migration is detected it stays installed, so stop asking on every reload.
    multiCurrencyAvailable?{error:null}:db.from('expenses').select('currency,original_amount,fx_rate').eq('trip_id',tripId).limit(1),
-   splitAvailable?{error:null}:db.from('expenses').select('split').eq('trip_id',tripId).limit(1)
+   splitAvailable?{error:null}:db.from('expenses').select('split').eq('trip_id',tripId).limit(1),
+    db.from('trip_member_refunds').select('*').eq('trip_id',tripId).order('created_at',{ascending:false})
   ]);
   if(!current())return; // Never commit an older or different-trip response.
   if(a.error||b.error||c.error||d.error||ledger.error||history.error){
@@ -506,6 +509,8 @@ async function refresh(){
   if(splitProbe.error)console.warn('Uneven splits require expense_splits.sql:',splitProbe.error);
   if(currencyProbe.error)console.warn('Multi-currency expenses require expense_currency.sql:',currencyProbe.error);
   fundRemindersAvailable=!reminderReply.error;fundReminders=reminderReply.data||[];
+   memberRefundsAvailable=!refundReply.error;memberRefunds=refundReply.data||[];
+   if(refundReply.error)console.warn('Fund refunds require trip_member_refunds.sql:',refundReply.error);
   if(reminderReply.error)console.warn('Fund reminders require trip_fund_reminders.sql:',reminderReply.error);memberInviteEmails=invites.error?[]:(invites.data||[]);memberInviteEmailsAvailable=!invites.error;
   editRequests=requests.items;editRequestsAvailable=requests.available;
   render();status(usedSharedFallback?'Chỉ xem · dữ liệu chia sẻ':'Synced');
@@ -690,28 +695,69 @@ function render(){
   permissionList.innerHTML='<p class="muted small">Chỉ thành viên đã liên kết tài khoản email mới hiện ở đây. Host có thể gắn email cho thành viên thủ công trong mục Sửa.</p>'+(permissionView.rows.length?permissionView.rows.map(r=>`<div class="member-permission-row"><span><b>${esc(r.name)}</b><small class="member-permission-status">${r.status}</small></span><button class="${r.canEdit?'secondary':'primary'} compact member-edit-toggle" data-user-id="${esc(r.userId)}" data-allow="${r.allow}">${r.actionLabel}</button></div>`).join(''):'<p class="muted small">Chưa có thành viên nào đã liên kết tài khoản.</p>');
   permissionList.querySelectorAll('.member-edit-toggle').forEach(button=>button.onclick=()=>toggleMemberEdit(button));
  }
- // Closing refund preview is calculated independently from proposed fund transfers.
- // No payout can be sent or saved here: the Host checks the figures before paying.
+
+ // Refund records are separate from expenses; these buttons never transfer funds.
  const closeReport=window.TripTogetherFinance.calculateClosingRefunds(trip,members,displayExpenses,contributions,{
   reminders:fundRemindersAvailable?fundReminders:[],debts:displayDebts
  });
  if(!fundRemindersAvailable)closeReport.issues.push('Chưa thể kiểm tra các khoản dự phòng; vui lòng cấu hình nhắc dự phòng quỹ.');
  closeReport.canRefund=closeReport.issues.length===0;
- $('closingRefundSummary').innerHTML=`<div class="closing-refunds-total"><span>Số dư dự kiến có thể hoàn</span><strong>${money(closeReport.expectedRemaining)}</strong></div><span class="closing-refunds-state ${closeReport.canRefund?'ready':'pending'}">${closeReport.canRefund?'Đã đủ điều kiện đối soát':'Cần kiểm tra trước khi hoàn quỹ'}</span>`;
- $('closingRefundWarnings').innerHTML=closeReport.issues.length
-  ?'<strong>Chưa nên chuyển tiền:</strong><ul>'+closeReport.issues.map(issue=>'<li>'+esc(issue)+'</li>').join('')+'</ul>'
-  :'<p class="muted small">Không phát hiện khoản chưa đối soát. Hãy kiểm tra số thực tế trong quỹ trước khi chuyển tiền.</p>';
- $('closingRefundList').innerHTML=closeReport.rows.length?closeReport.rows.map(person=>`
-  <div class="closing-refund-row">
-   <div class="closing-refund-member"><strong>${esc(person.name)}</strong><small>Quỹ đầu chuyến: ${money(person.opening)} · Đã đóng: ${money(person.contributed)}</small><small>Phần chi thực tế: ${money(person.spent)}</small></div>
-   <div class="closing-refund-amount ${person.refund<0?'owes':''}"><strong>${money(Math.abs(person.refund))}</strong><small>${person.refund<0?'Cần đóng thêm':'Dự kiến nhận lại'}</small></div>
-  </div>`).join(''):'<p class="muted small">Chưa có thành viên để đối soát.</p>';
- $('copyClosingRefunds').disabled=!closeReport.rows.length||!closeReport.canRefund;
+ const refundLedger=window.TripTogetherRefundLedger.reconcile(closeReport,memberRefunds);
+ const warnings=[...closeReport.issues,...refundLedger.problems];
+ const allowed=canEdit&&!readOnly&&memberRefundsAvailable&&!warnings.length;
+ const pending=refundLedger.rows.filter(p=>p.planned>0&&!p.paidRecord);
+ $('refundLedgerSetup').classList.toggle('hidden',readOnly||memberRefundsAvailable);
+ $('closingRefundSummary').innerHTML=
+  '<div class="closing-refunds-total"><span>Số dư dự kiến có thể hoàn</span><strong>'+money(closeReport.expectedRemaining)+'</strong></div>'+
+  '<div class="closing-refunds-total closing-refunds-paid"><span>Đã hoàn thành viên</span><strong>'+money(refundLedger.paidTotal)+'</strong></div>'+
+  '<div class="closing-refunds-total closing-refunds-pending"><span>Còn phải hoàn</span><strong>'+money(refundLedger.remainingTotal)+'</strong></div>'+
+  '<span class="closing-refunds-state '+(warnings.length?'pending':'ready')+'">'+(warnings.length?'Cần kiểm tra trước khi hoàn quỹ':!memberRefundsAvailable?'Chưa bật ghi hoàn quỹ':pending.length?'Đang hoàn quỹ':refundLedger.paidTotal>0?'Đã hoàn tất':'Không có tiền cần hoàn')+'</span>';
+ $('closingRefundWarnings').innerHTML=warnings.length
+  ?'<strong>Cần đối soát:</strong><ul>'+warnings.map(issue=>'<li>'+esc(issue)+'</li>').join('')+'</ul>'
+  :'<p class="muted small">Chỉ đánh dấu đã hoàn sau khi thực sự chuyển tiền. Ghi nhận này không tạo khoản chi mới.</p>';
+ $('markAllRefundsPaid').classList.toggle('hidden',readOnly||!canEdit||!memberRefundsAvailable);
+ $('markAllRefundsPaid').disabled=!allowed||!pending.length;
+ $('closingRefundList').innerHTML=refundLedger.rows.length?refundLedger.rows.map(person=>{
+  const paid=!!person.paidRecord,eligible=person.planned>0;
+  const state=paid?'Đã hoàn '+fmtDate(person.paidRecord.paid_on):eligible?'Chưa hoàn':'Không có tiền hoàn';
+  const buttons=!readOnly&&canEdit&&memberRefundsAvailable?(paid
+   ?'<button class="secondary compact undo-member-refund" type="button" data-id="'+esc(person.paidRecord.id)+'" data-member="'+esc(person.name)+'" aria-label="Hoàn tác hoàn quỹ cho '+esc(person.name)+'">Hoàn tác</button>'
+   :eligible?'<button class="secondary compact mark-member-refund" type="button" data-member-id="'+esc(person.id)+'" '+(allowed?'':'disabled')+' aria-label="Đánh dấu đã hoàn quỹ cho '+esc(person.name)+'">Đánh dấu đã hoàn</button>':''):'';
+  return '<div class="closing-refund-row"><div class="closing-refund-member"><strong>'+esc(person.name)+'</strong>'+
+   '<small>Quỹ đầu chuyến: '+money(person.opening)+' · Đã đóng: '+money(person.contributed)+'</small>'+
+   '<small>Phần chi thực tế: '+money(person.spent)+'</small>'+
+   '<span class="closing-refund-payment-status '+(paid?'paid':'')+'">'+esc(state)+(paid?' · '+money(person.paidRecord.amount):'')+'</span></div>'+
+   '<div class="closing-refund-actions"><div class="closing-refund-amount '+(person.refund<0?'owes':'')+'"><strong>'+money(Math.abs(person.refund))+'</strong><small>'+(person.refund<0?'Cần đóng thêm':'Dự kiến nhận lại')+'</small></div>'+buttons+'</div></div>';
+ }).join(''):'<p class="muted small">Chưa có thành viên để đối soát.</p>';
+ const recordRefund=async people=>{
+  if(!trip||!user||!canEdit||readOnly||!memberRefundsAvailable||!allowed||!people.length)return;
+  const tripId=trip.id,amount=people.reduce((sum,p)=>sum+p.planned,0);
+  const whom=people.length===1?people[0].name:people.length+' thành viên';
+  if(!localizedConfirm('Xác nhận ĐÃ CHUYỂN '+money(amount)+' hoàn quỹ cho '+whom+'? Ứng dụng chỉ ghi nhận khoản chuyển tiền thực tế.'))return;
+  const entries=people.map(p=>({trip_id:tripId,member_id:p.id,amount:p.planned,paid_on:dateToday(),created_by:user.id}));
+  const {error}=await db.from('trip_member_refunds').insert(entries);
+  if(error){localizedAlert('Không thể ghi nhận hoàn quỹ: '+error.message);return}
+  if(trip?.id===tripId)await refresh();
+ };
+ $('closingRefundList').querySelectorAll('.mark-member-refund').forEach(button=>button.onclick=()=>recordRefund(pending.filter(p=>p.id===button.dataset.memberId)));
+ $('closingRefundList').querySelectorAll('.undo-member-refund').forEach(button=>button.onclick=async()=>{
+  if(!canEdit||readOnly||!memberRefundsAvailable)return;
+  if(!localizedConfirm('Hoàn tác ghi nhận đã hoàn quỹ cho '+button.dataset.member+'? Thao tác không thu hồi chuyển khoản thực tế.'))return;
+  await withButtonLoading(button,'Đang hoàn tác…',async()=>{
+   const tripId=trip.id;
+   const {error}=await db.from('trip_member_refunds').delete().eq('id',button.dataset.id).eq('trip_id',tripId);
+   if(error){localizedAlert('Không thể hoàn tác: '+error.message);return}
+   if(trip?.id===tripId)await refresh();
+  });
+ });
+ $('markAllRefundsPaid').onclick=()=>recordRefund(pending);
+ $('copyClosingRefunds').disabled=!closeReport.rows.length||warnings.length>0;
  $('copyClosingRefunds').onclick=async()=>{
-  if(!closeReport.canRefund)return;
+  if(warnings.length)return;
   const lines=['HOÀN QUỸ CUỐI CHUYẾN — '+trip.name,'Số dư dự kiến: '+money(closeReport.expectedRemaining),
-   ...closeReport.rows.map(person=>person.name+': '+(person.refund<0?'cần đóng thêm ':'nhận lại ')+money(Math.abs(person.refund))),
-   'Chỉ là dự kiến; chưa ghi nhận hay chuyển bất kỳ khoản hoàn quỹ nào.'];
+   'Đã hoàn: '+money(refundLedger.paidTotal)+' · Còn phải hoàn: '+money(refundLedger.remainingTotal),
+   ...refundLedger.rows.map(person=>person.name+': '+(person.paidRecord?'đã hoàn ':'cần hoàn ')+money(Math.max(0,person.refund))),
+   'Chỉ ghi nhận hoàn quỹ sau khi thực sự chuyển tiền.'];
   try{await navigator.clipboard.writeText(lines.join('\n'));status('Đã sao chép bảng hoàn quỹ')}
   catch(error){localizedAlert('Không thể sao chép bảng hoàn quỹ trên trình duyệt này.')}
  };
@@ -747,7 +793,7 @@ function render(){
  }).join(''):'<p class="muted small">Chưa có thanh toán nào.</p>';
  activityPanel.classList.toggle('hidden',readOnly);
  if(!readOnly){
-  const entityNames={expenses:'Khoản chi',contributions:'Đóng quỹ',member_debts:'Nợ riêng',trip_payments:'Thanh toán',trip_fund_reminders:'Nhắc dự phòng quỹ'};
+  const entityNames={expenses:'Khoản chi',contributions:'Đóng quỹ',member_debts:'Nợ riêng',trip_payments:'Thanh toán',trip_fund_reminders:'Nhắc dự phòng quỹ',trip_member_refunds:'Hoàn quỹ'};
   const actionNames={INSERT:'Đã thêm',UPDATE:'Đã sửa',DELETE:'Đã xóa'};
   activityList.innerHTML=activityEvents.length?window.TripTogetherUI.sortByDate(activityEvents,'recorded_at',$('activityDateSort').value).map(event=>{
    const d=event.after_data||event.before_data||{},entity=entityNames[event.source_table]||event.source_table;
@@ -821,16 +867,16 @@ $('exportExcelBtn').onclick=async()=>{
   try{
    const {data:freshTrip,error:tripError}=await db.from('trips').select('*').eq('id',tripId).single();
    if(tripError||!freshTrip)throw new Error('Không thể lấy thông tin chuyến đi: '+(tripError?.message||'Không tìm thấy'));
-   const [freshMembers,freshExpenses,freshContributions,freshDebts,freshPayments,freshReminders]=await Promise.all([
+   const [freshMembers,freshExpenses,freshContributions,freshDebts,freshPayments,freshReminders,freshRefunds]=await Promise.all([
     excelExportRows('members',tripId),excelExportRows('expenses',tripId),
     excelExportRows('contributions',tripId),excelExportRows('member_debts',tripId),
-    excelExportRows('trip_payments',tripId),fundRemindersAvailable?excelExportRows('trip_fund_reminders',tripId):Promise.resolve([])
+    excelExportRows('trip_payments',tripId),fundRemindersAvailable?excelExportRows('trip_fund_reminders',tripId):Promise.resolve([]),memberRefundsAvailable?excelExportRows('trip_member_refunds',tripId):Promise.resolve([])
    ]);
    if(trip?.id!==tripId)throw new Error('Chuyến đi đã thay đổi; vui lòng thử lại.');
    const {view_passcode_hash, ...safeTrip}=freshTrip; // Never back up secret viewing passcodes.
    const file=window.TripTogetherExcelBackup.download({
     trip:safeTrip,members:freshMembers,expenses:freshExpenses,
-    contributions:freshContributions,debts:freshDebts,payments:freshPayments,reminders:freshReminders
+    contributions:freshContributions,debts:freshDebts,payments:freshPayments,reminders:freshReminders,refunds:freshRefunds
    });
    localizedAlert('Đã tạo bản sao Excel: '+file+'\nHãy lưu file tại nơi an toàn. Ảnh hóa đơn cần được sao lưu riêng.');
   }catch(error){localizedAlert('Không thể xuất Excel: '+error.message)}
