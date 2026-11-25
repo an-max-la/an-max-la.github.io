@@ -1939,7 +1939,7 @@ select:hover{border-color:#cfc9ef}
  -webkit-appearance:auto;appearance:auto;
 }
 #expenseDialog input[type="date"]::-webkit-date-and-time-value{
- min-height:0;min-width:0;text-align:left;
+ min-height:0;min-width:0;text-align:center;
 }
 #expenseDialog input[type="date"]::-webkit-datetime-edit{
  display:inline-flex;align-items:center;min-width:0;padding:0;
@@ -1965,3 +1965,27 @@ select:hover{border-color:#cfc9ef}
  .closing-refund-member{flex:1 1 155px}
  .closing-refunds-total{min-width:0}
 }
+
+/* Keep the iOS native date widget inside a fixed, shrinkable grid cell. */
+#expenseDialog .expense-date-field{min-width:0;max-width:100%;width:100%}
+#expenseDialog .expense-date-control{
+ display:block;position:relative;box-sizing:border-box;
+ width:100%;max-width:100%;min-width:0;height:46px;
+ margin-top:7px;border:1px solid #dedce5;border-radius:12px;
+ background:#f8f7fa;overflow:hidden;
+}
+#expenseDialog #expenseDate{
+ position:absolute;inset:0;display:block;box-sizing:border-box;
+ width:100%;max-width:100%;min-width:0;inline-size:100%;min-inline-size:0;max-inline-size:100%;
+ height:100%;min-height:0;max-height:100%;block-size:100%;min-block-size:0;max-block-size:100%;
+ margin:0;padding:0 10px;border:0;border-radius:0;background:transparent;
+ -webkit-appearance:none;appearance:none;text-align:center;line-height:normal;
+}
+#expenseDialog .expense-date-control:focus-within{border-color:#6559e8;box-shadow:0 0 0 2px #6559e826}
+#expenseDialog #expenseDate::-webkit-date-and-time-value{
+ display:flex;align-items:center;justify-content:center;width:100%;min-width:0;height:100%;margin:0;text-align:center;
+}
+#expenseDialog #expenseDate::-webkit-datetime-edit{
+ display:flex;align-items:center;justify-content:center;min-width:0;padding:0;text-align:center;
+}
+#expenseDialog #expenseDate::-webkit-datetime-edit-fields-wrapper{padding:0}
