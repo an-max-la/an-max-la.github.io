@@ -84,6 +84,81 @@
     });
   }
 
+  // A final cash refund is NOT the same as dividing the balance equally: every member
+  // gets their initial-fund share plus contributions, minus only expenses they shared.
+  // All allocation is in whole VND; distribute fractional remainders deterministically
+  // so the member totals always add back to the available common fund.
+  function allocateWholeVnd(amount, raw, members) {
+    const ids=members.map(m=>m.user_id),out=new Map(ids.map(id=>[id,0]));
+    const eligible=ids.map((id,index)=>({id,index,raw:Number(raw.get(id)||0)}))
+      .filter(item=>item.raw>0);
+    if(!eligible.length)return out;
+    const goal=Math.round(Number(amount));
+    let assigned=0;
+    const amounts=eligible.map(item=>{
+      const base=Math.floor(item.raw);
+      assigned+=base;
+      return {...item,base,fraction:item.raw-base};
+    });
+    const remaining=goal-assigned;
+    amounts.sort((a,b)=>b.fraction-a.fraction||a.index-b.index);
+    // Normally remaining is at most participant count. If the input isn't integral,
+    // rounding to the nearest VND can still be reconciled safely here.
+    for(let i=0;i<Math.max(0,remaining);i++)amounts[i%amounts.length].base++;
+    if(remaining<0){
+      const reverse=[...amounts].sort((a,b)=>a.fraction-b.fraction||a.index-b.index);
+      for(let i=0;i<-remaining;i++)reverse[i%reverse.length].base--;
+    }
+    for(const item of amounts)out.set(item.id,item.base);
+    return out;
+  }
+
+  function calculateClosingRefunds(trip,members,expenses,contributions,{reminders=[],debts=[]}={}){
+    const issues=[],rows=[];
+    if(!members.length)issues.push('Chuyến đi chưa có thành viên.');
+    const memberCount=Math.max(1,members.length),initial=Math.round(Number(trip?.initial_fund||0));
+    const initialShare=allocateWholeVnd(initial,new Map(members.map(m=>[m.user_id,initial/memberCount])),members);
+    const shares=new Map(members.map(m=>[m.user_id,0]));
+    const memberIds=new Set(members.map(m=>m.user_id));
+    for(const expense of expenses){
+      if(expense.split?.weights){
+        const valid=Object.entries(expense.split.weights).filter(([id,weight])=>memberIds.has(id)&&Number(weight)>0);
+        if(!valid.length||Object.keys(expense.split.weights).length!==valid.length)
+          issues.push('Có khoản chi với thành viên hoặc phần chia không hợp lệ.');
+      }
+      if(expense.payer_id&&!memberIds.has(expense.payer_id))
+        issues.push('Có khoản chi được ứng bởi thành viên không còn trong chuyến.');
+      const allocation=allocateWholeVnd(expense.amount,allocateExpense(expense,members),members);
+      for(const [id,value] of allocation)shares.set(id,(shares.get(id)||0)+value);
+      if(expense.payer_id&&Number(expense.amount)-reimbursedAmount(expense)>.5)
+        issues.push('Quỹ còn khoản ứng trước chưa hoàn cho thành viên.');
+    }
+    const contributionByMember=new Map(members.map(m=>[m.user_id,0]));
+    for(const c of contributions){
+      if(!memberIds.has(c.payer_id))issues.push('Có khoản đóng quỹ của thành viên không còn trong chuyến.');
+      contributionByMember.set(c.payer_id,(contributionByMember.get(c.payer_id)||0)+Math.round(Number(c.amount)));
+    }
+    for(const m of members){
+      const contributed=contributionByMember.get(m.user_id)||0,opening=initialShare.get(m.user_id)||0;
+      const spent=shares.get(m.user_id)||0;
+      const refund=opening+contributed-spent;
+      rows.push({id:m.user_id,name:m.name,opening,contributed,spent,refund});
+      if(refund<0)issues.push('Một số thành viên cần đóng bổ sung trước khi hoàn quỹ.');
+    }
+    if(reminders.some(x=>Number(x.total_amount)-Number(x.paid_amount||0)>.5))
+      issues.push('Vẫn còn khoản dự phòng chưa thanh toán hoặc chưa được đánh dấu hoàn tất.');
+    if(debts.some(x=>Number(x.amount)-Number(x.paid_amount??(x.is_settled?x.amount:0))>.5))
+      issues.push('Còn nợ riêng giữa các thành viên; hãy đối soát riêng trước khi kết thúc.');
+    const fund=initial+contributions.reduce((sum,x)=>sum+Number(x.amount),0);
+    const spent=expenses.reduce((sum,x)=>sum+Number(x.amount),0);
+    const expectedRemaining=Math.round(fund-spent);
+    const allocated=rows.reduce((sum,x)=>sum+x.refund,0);
+    if(allocated!==expectedRemaining)issues.push('Số dư tính toán không khớp; kiểm tra lại khoản chi và đóng quỹ.');
+    if(expectedRemaining<0)issues.push('Quỹ còn thiếu tiền để quyết toán.');
+    // Unique issues retain their human-friendly order.
+    return {rows,expectedRemaining,canRefund:issues.length===0,issues:[...new Set(issues)]};
+  }
+
   function calculateDebtBalances(members, debts) {
     return members.map(member => ({
       id: member.user_id, name: member.name,
@@ -122,5 +197,5 @@
     return get('year') + '-' + get('month') + '-' + get('day');
   }
 
-  return { calculateTotals, calculateMemberBalances, allocateExpense, memberShares, calculateDebtBalances, applyPayments, settle, vietnamDate };
+  return { calculateTotals, calculateMemberBalances, allocateExpense, memberShares, calculateClosingRefunds, calculateDebtBalances, applyPayments, settle, vietnamDate };
 });

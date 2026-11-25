@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#6559e8"><meta name="description" content="Quản lý chi tiêu và quỹ chung cho chuyến đi">
 <link rel="stylesheet" href="airport-background.css?v=1">
 <link rel="manifest" href="manifest.webmanifest?v=3"><link rel="icon" href="triptogether-purple-icon.png?v=3" type="image/png" sizes="160x160"><link rel="apple-touch-icon" href="triptogether-purple-icon.png?v=3">
-<title>TripTogether</title><link rel="stylesheet" href="styles.css?v=95">
+<title>TripTogether</title><link rel="stylesheet" href="styles.css?v=96">
 </head>
 <body>
 <div class="airport-scene" aria-hidden="true">
@@ -157,6 +157,19 @@
     <div id="fundReminderList" class="list ledger-list" aria-live="polite"></div>
   </section>
     <div class="sectionhead"><div><h2>Theo dõi quỹ</h2><p class="muted small">Quỹ ban đầu được tính riêng. Các lần đóng thêm nằm trong danh sách dưới đây.</p></div><div class="section-actions"><button class="primary compact" id="addContribution"><svg class="tt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg> Ghi đóng quỹ</button></div></div><div class="sort-toolbar"><label for="fundDateSort">Sắp xếp theo ngày</label><select id="fundDateSort" aria-label="Sắp xếp đóng quỹ theo ngày"><option value="newest">Mới nhất trước</option><option value="oldest">Cũ nhất trước</option></select></div><div id="contributionList" class="list ledger-list"></div>
+    <section id="closingRefundSection" class="closing-refunds" aria-labelledby="closingRefundTitle">
+      <div class="closing-refunds-head">
+        <div>
+          <h2 id="closingRefundTitle">Hoàn quỹ cuối chuyến</h2>
+          <p class="muted small">Tính số tiền mỗi người được nhận lại dựa trên tiền đã đóng và các khoản chi họ thực sự tham gia.</p>
+        </div>
+        <button id="copyClosingRefunds" class="secondary compact" type="button">Sao chép bảng hoàn quỹ</button>
+      </div>
+      <div id="closingRefundSummary" class="closing-refunds-summary" aria-live="polite"></div>
+      <div id="closingRefundWarnings" class="closing-refunds-warnings" role="status"></div>
+      <div id="closingRefundList" class="closing-refunds-list" aria-live="polite"></div>
+      <p class="muted small closing-refunds-note">Bảng dự kiến, chưa ghi nhận chuyển tiền. Quỹ ban đầu hiện được giả định chia đều cho các thành viên; hãy kiểm tra nguồn đóng quỹ ban đầu trước khi hoàn. Khi có người không tham gia chi phí (ví dụ không uống cà phê), chọn <strong>Chia cho → Một số người</strong> khi ghi khoản chi.</p>
+    </section>
   </section>
   <section id="peopleTab" class="tabbody hidden">
     <div class="sectionhead members-sectionhead"><div><h2>Chi tiêu từng thành viên</h2><p class="muted small">Theo dõi phần chi, đóng quỹ và khoản quỹ còn nợ của mỗi người.</p></div><div class="section-actions member-actions"><button class="secondary compact" id="addDebt"><svg class="tt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg> Ghi khoản nợ</button><button class="primary compact" id="addMember"><svg class="tt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg> Thêm thành viên</button></div></div>
@@ -297,7 +310,7 @@
 <dialog id="debtDialog"><form method="dialog" id="debtForm"><h2>Ghi khoản nợ thành viên</h2><p class="muted small">Khoản này hiển thị trong đối soát thành viên; không trừ vào quỹ chung.</p><div class="formgrid"><label>Người nợ<select id="debtDebtor" required></select></label><label>Người nhận nợ<select id="debtCreditor" required></select></label></div><label>Số tiền (VNĐ)<input id="debtAmount" data-money type="text" inputmode="numeric" min="1" required placeholder="250.000"></label><div class="formgrid"><label>Ngày<input id="debtDate" type="date" required></label><label>Ghi chú<input id="debtNote" maxlength="200" placeholder="Lý do khoản nợ"></label></div><menu><button class="secondary" id="debtCancel" type="button">Hủy</button><button class="primary" id="debtSave" value="default">Lưu khoản nợ</button></menu></form></dialog>
 <script>
 window.__supabaseSdkReady=new Promise(resolve=>{const sources=['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2','https://unpkg.com/@supabase/supabase-js@2'];let index=0;const load=()=>{if(window.supabase){resolve(true);return}if(index>=sources.length){resolve(false);return}const script=document.createElement('script');script.src=sources[index++];let finished=false;const timer=setTimeout(()=>{if(finished)return;finished=true;script.remove();load()},6000);script.onload=()=>{if(finished)return;finished=true;clearTimeout(timer);if(window.supabase)resolve(true);else load()};script.onerror=()=>{if(finished)return;finished=true;clearTimeout(timer);script.remove();load()};document.head.appendChild(script)};load()});
-</script><script src="i18n.js?v=29"></script><script src="finance.js?v=4"></script><script src="trip-ui.js?v=13"></script><script src="ui-shell.js?v=9"></script>
+</script><script src="i18n.js?v=30"></script><script src="finance.js?v=5"></script><script src="trip-ui.js?v=13"></script><script src="ui-shell.js?v=9"></script>
 <script src="icons.js?v=2"></script>
 <script src="money-input.js?v=1"></script>
 <script src="currency.js?v=3"></script>
@@ -305,7 +318,7 @@ window.__supabaseSdkReady=new Promise(resolve=>{const sources=['https://cdn.jsde
 <script src="receipts.js?v=1"></script>
 <script src="excel-backup.js?v=5"></script>
 <script src="fund-reminders.js?v=2"></script>
-<script src="app.js?v=92"></script>
+<script src="app.js?v=93"></script>
 <script>
 /* Boot guard: if app.js failed to load or crashed before init() (e.g. an outdated cached page running
  * newer scripts), clear the offline cache and reload once instead of spinning forever. */

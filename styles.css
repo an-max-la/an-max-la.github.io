@@ -1804,3 +1804,42 @@ select:hover{border-color:#cfc9ef}
 .tt-activity-more{display:block;margin:10px auto 0}
 @media(max-width:860px){.tt-activity-list{grid-template-columns:1fr;gap:8px}}
 @media(max-width:650px){.tt-activity-card{margin-top:12px}.tt-activity-head .sort-toolbar{flex:1 1 100%}}
+/* End-of-trip fund closure: compact member-by-member refund preview. */
+.closing-refunds{margin-top:22px;padding:20px;border:1px solid #ded8fa;border-radius:18px;background:linear-gradient(150deg,#fbfaff,#fff);min-width:0}
+.closing-refunds-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.closing-refunds-head h2{margin:0 0 5px;font-size:19px}
+.closing-refunds-head p{max-width:62ch}
+.closing-refunds-head button{min-height:42px}
+.closing-refunds-head button:disabled{opacity:.45;cursor:not-allowed}
+.closing-refunds-summary{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:16px 0}
+.closing-refunds-total{display:flex;flex-direction:column;gap:4px;padding:12px 16px;background:#eeebff;color:#5144b9;border-radius:13px}
+.closing-refunds-total span{font-size:12px;font-weight:600}
+.closing-refunds-total strong{font-size:clamp(19px,3vw,26px);font-variant-numeric:tabular-nums}
+.closing-refunds-state{font-size:12px;font-weight:700;border-radius:40px;padding:7px 10px}
+.closing-refunds-state.ready{background:#eaf8ee;color:#257347}
+.closing-refunds-state.pending{background:#fff4e9;color:#995814}
+.closing-refunds-warnings{font-size:13px;line-height:1.5}
+.closing-refunds-warnings:has(ul){padding:12px 14px;border-radius:12px;background:#fff7ef;color:#844515;margin-bottom:12px}
+.closing-refunds-warnings ul{margin:6px 0 0;padding-left:18px}
+.closing-refunds-list{display:grid;gap:8px}
+.closing-refund-row{display:flex;justify-content:space-between;align-items:center;gap:14px;border:1px solid #e9e5f6;border-radius:13px;padding:12px 14px;background:#fff}
+.closing-refund-member{display:flex;flex-direction:column;gap:4px;min-width:0}
+.closing-refund-member strong{font-size:14px;color:#29254e;overflow-wrap:anywhere}
+.closing-refund-member small{font-size:12px;color:#77728d;line-height:1.4}
+.closing-refund-amount{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;color:#5144b9}
+.closing-refund-amount strong{font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.closing-refund-amount small{font-size:11px;color:#77728d}
+.closing-refund-amount.owes{color:#b23e36}
+.closing-refunds-note{margin-top:13px}
+@media(max-width:540px){
+ .closing-refunds{padding:14px;border-radius:15px}
+ .closing-refunds-head button{width:100%}
+ .closing-refund-row{gap:8px;padding:11px}
+ .closing-refund-member small{font-size:11px}
+ .closing-refund-amount strong{font-size:clamp(13px,4vw,16px)}
+ .closing-refunds-total{width:100%}
+}
+@media(max-width:350px){
+ .closing-refund-row{align-items:flex-start;flex-direction:column}
+ .closing-refund-amount{align-items:flex-start}
+}
