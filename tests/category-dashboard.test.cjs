@@ -33,7 +33,7 @@ test('dashboard is wired to all enriched expenses, not UI-filtered results',()=>
  const html=read('index.html'),app=read('app.js');
  assert.match(html,/id="categorySpendingDashboard"/);
  assert.match(html,/id="categoryDashboardContent"/);
- assert.match(html,/category-dashboard\.js\?v=1/);
+ assert.match(html,/category-dashboard\.js\?v=2/);
  assert.match(app,/TripTogetherCategoryDashboard\.summarize\(displayExpenses\)/);
  assert.doesNotMatch(app,/TripTogetherCategoryDashboard\.summarize\(visibleExpenses\)/);
  assert.match(app,/categoryReport\.total/);
