@@ -58,3 +58,12 @@ test('donut keeps a thin ring and an unbroken VND total, without expense count',
  assert.match(css,/\.category-dashboard-donut-center strong\{[^}]*font-variant-numeric:tabular-nums/);
  assert.match(css,/@media\(max-width:700px\)[\s\S]*?\.category-dashboard-donut-center strong\{font-size:clamp\(11px,3vw,15px\)\}/);
 });
+
+test('category dashboard precedes recent expense cards on trip overview',()=>{
+ const html=read('index.html');
+ const category=html.indexOf('id="categorySpendingDashboard"');
+ const recent=html.indexOf('Khoản chi gần đây');
+ const activity=html.indexOf('id="activityPanel"');
+ assert.ok(category>=0&&category<recent&&recent<activity);
+ assert.equal((html.match(/id="categorySpendingDashboard"/g)||[]).length,1);
+});
