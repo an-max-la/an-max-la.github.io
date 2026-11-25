@@ -33,7 +33,7 @@ test('dashboard is wired to all enriched expenses, not UI-filtered results',()=>
  const html=read('index.html'),app=read('app.js');
  assert.match(html,/id="categorySpendingDashboard"/);
  assert.match(html,/id="categoryDashboardContent"/);
- assert.match(html,/category-dashboard\.js\?v=1/);
+ assert.match(html,/category-dashboard\.js\?v=2/);
  assert.match(app,/TripTogetherCategoryDashboard\.summarize\(displayExpenses\)/);
  assert.doesNotMatch(app,/TripTogetherCategoryDashboard\.summarize\(visibleExpenses\)/);
  assert.match(app,/categoryReport\.total/);
@@ -66,4 +66,25 @@ test('category dashboard precedes recent expense cards on trip overview',()=>{
  const activity=html.indexOf('id="activityPanel"');
  assert.ok(category>=0&&category<recent&&recent<activity);
  assert.equal((html.match(/id="categorySpendingDashboard"/g)||[]).length,1);
+});
+
+test('Other (Khác) is always shown last even when it has the highest spend',()=>{
+ const report=stats.summarize([
+  {category:'Other',amount:900000},
+  {category:'Food',amount:30000},
+  {category:'Transport',amount:50000}
+ ]);
+ assert.deepEqual(report.rows.map(x=>x.key),['Transport','Food','Other']);
+ assert.equal(report.total,980000);
+ assert.equal(report.rows.at(-1).amount,900000);
+ assert.ok(Math.abs(report.rows.reduce((sum,x)=>sum+x.share,0)-100)<0.000001);
+});
+test('legacy Vietnamese Khác category is also placed at the end',()=>{
+ const report=stats.summarize([
+  {category:'Khác',amount:400000},
+  {category:'Accommodation',amount:50000},
+  {category:'Other',amount:20000},
+  {category:'Food',amount:90000}
+ ]);
+ assert.deepEqual(report.rows.map(x=>x.key),['Food','Accommodation','Khác','Other']);
 });
