@@ -9,6 +9,7 @@ const dateToday = () => window.TripTogetherFinance.vietnamDate();
 let db, user, trip, members=[], expenses=[], contributions=[], debts=[], channel, readOnly=false, canEdit=false, editPermissionsReady=false, sharedCode=null, sharedPasscode=null, viewerTimer=null;
 let editRequests=[], editRequestsAvailable=false, editRequestTimer=null;
 let fundReminders=[],fundRemindersAvailable=false;
+let memberRefunds=[],memberRefundsAvailable=false;
 // Multi-currency needs expense_currency.sql; until it is installed the app stays VND-only.
 let multiCurrencyAvailable=false;
 // Uneven splits need expense_splits.sql; until then every expense is shared equally (old behaviour).
@@ -355,7 +356,7 @@ async function openSharedTrip(code){
   if(access.joined){await joinTrip(data.trip.id,false);return}
   const ledger=await db.rpc('get_shared_trip_payments',{p_invite_code:code});
   if(ledger.error)throw ledger.error;
-  ++refreshSequence;readOnly=true;sharedCode=code;sharedPasscode=null;trip=data.trip;members=data.members||[];expenses=data.expenses||[];contributions=data.contributions||[];debts=data.debts||[];payments=ledger.data||[];activityEvents=[];fundReminders=[];fundRemindersAvailable=false;render();await showTrip();if(viewerTimer)clearInterval(viewerTimer);viewerTimer=setInterval(()=>{if(readOnly&&trip)void refresh()},20000)
+  ++refreshSequence;readOnly=true;sharedCode=code;sharedPasscode=null;trip=data.trip;members=data.members||[];expenses=data.expenses||[];contributions=data.contributions||[];debts=data.debts||[];payments=ledger.data||[];activityEvents=[];fundReminders=[];fundRemindersAvailable=false;memberRefunds=[];memberRefundsAvailable=false;render();await showTrip();if(viewerTimer)clearInterval(viewerTimer);viewerTimer=setInterval(()=>{if(readOnly&&trip)void refresh()},20000)
  }catch(error){localizedAlert('Không thể mở chuyến đi. '+error.message)}finally{pageLoading(false)}
 }
 // A private invitation link allows viewing, never permission to edit.
@@ -412,7 +413,7 @@ async function joinTrip(id,ask=true){
   const {data:tdata,error}=await db.from('trips').select('id,invite_code,name,initial_fund,created_by,created_at').eq('id',tripId).single();
   if(error){localizedAlert('Không tìm thấy chuyến đi hoặc link không hợp lệ. '+error.message);return}
   if(channel){await db.removeChannel(channel);channel=null}
-  payments=[];activityEvents=[];fundReminders=[];fundRemindersAvailable=false;memberInviteEmails=[];
+  payments=[];activityEvents=[];fundReminders=[];fundRemindersAvailable=false;memberRefunds=[];memberRefundsAvailable=false;memberInviteEmails=[];
   trip=tdata;await refresh();await showTrip();
   // The saved-trip list is hidden while a trip is open: refresh it in the background, never block opening.
   void loadMyTrips();
@@ -424,6 +425,7 @@ async function joinTrip(id,ask=true){
    .on('postgres_changes',{event:'*',schema:'public',table:'expenses',filter:'trip_id=eq.'+tripId},watchChanges)
    .on('postgres_changes',{event:'*',schema:'public',table:'contributions',filter:'trip_id=eq.'+tripId},watchChanges)
    .on('postgres_changes',{event:'*',schema:'public',table:'trip_fund_reminders',filter:'trip_id=eq.'+tripId},watchChanges)
+    .on('postgres_changes',{event:'*',schema:'public',table:'trip_member_refunds',filter:'trip_id=eq.'+tripId},watchChanges)
    .on('postgres_changes',{event:'*',schema:'public',table:'members',filter:'trip_id=eq.'+tripId},watchChanges)
    .on('postgres_changes',{event:'*',schema:'public',table:'member_debts',filter:'trip_id=eq.'+tripId},watchChanges)
    .subscribe(state=>{
@@ -451,10 +453,10 @@ async function refresh(){
    if(tripReply.error||!tripReply.data?.trip||ledgerReply.error){status('Không thể cập nhật');return}
    const data=tripReply.data;
    trip=data.trip;members=data.members||[];expenses=data.expenses||[];contributions=data.contributions||[];debts=data.debts||[];
-   payments=ledgerReply.data||[];activityEvents=[];
+   payments=ledgerReply.data||[];activityEvents=[];memberRefunds=[];memberRefundsAvailable=false;
    render();status('Chỉ xem');return;
   }
-  const [a,b,c,d,requests,ledger,history,invites,reminderReply,currencyProbe,splitProbe]=await Promise.all([
+  const [a,b,c,d,requests,ledger,history,invites,reminderReply,currencyProbe,splitProbe,refundReply]=await Promise.all([
    db.from('members').select('*').eq('trip_id',tripId).order('created_at').order('user_id'),
    db.from('expenses').select('*').eq('trip_id',tripId).order('spent_on',{ascending:false}),
    db.from('contributions').select('*').eq('trip_id',tripId).order('paid_on',{ascending:false}),
@@ -466,7 +468,8 @@ async function refresh(){
     db.from('trip_fund_reminders').select('*').eq('trip_id',tripId).order('created_at',{ascending:false}),
    // Schema probes: once a migration is detected it stays installed, so stop asking on every reload.
    multiCurrencyAvailable?{error:null}:db.from('expenses').select('currency,original_amount,fx_rate').eq('trip_id',tripId).limit(1),
-   splitAvailable?{error:null}:db.from('expenses').select('split').eq('trip_id',tripId).limit(1)
+   splitAvailable?{error:null}:db.from('expenses').select('split').eq('trip_id',tripId).limit(1),
+    db.from('trip_member_refunds').select('*').eq('trip_id',tripId).order('created_at',{ascending:false})
   ]);
   if(!current())return; // Never commit an older or different-trip response.
   if(a.error||b.error||c.error||d.error||ledger.error||history.error){
@@ -505,6 +508,8 @@ async function refresh(){
   if(splitProbe.error)console.warn('Uneven splits require expense_splits.sql:',splitProbe.error);
   if(currencyProbe.error)console.warn('Multi-currency expenses require expense_currency.sql:',currencyProbe.error);
   fundRemindersAvailable=!reminderReply.error;fundReminders=reminderReply.data||[];
+   memberRefundsAvailable=!refundReply.error;memberRefunds=refundReply.data||[];
+   if(refundReply.error)console.warn('Fund refunds require trip_member_refunds.sql:',refundReply.error);
   if(reminderReply.error)console.warn('Fund reminders require trip_fund_reminders.sql:',reminderReply.error);memberInviteEmails=invites.error?[]:(invites.data||[]);memberInviteEmailsAvailable=!invites.error;
   editRequests=requests.items;editRequestsAvailable=requests.available;
   render();status(usedSharedFallback?'Chỉ xem · dữ liệu chia sẻ':'Synced');
