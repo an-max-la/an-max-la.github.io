@@ -2,6 +2,9 @@
 (function(){
 'use strict';
 const dictionary={
+"Chưa bật ghi hoàn quỹ":"Refund recording is not set up",
+"Không có tiền cần hoàn":"No refunds due",
+"Hoàn quỹ":"Fund refund",
   "Đánh dấu đã hoàn tất cả": "Mark all as refunded",
   "Chưa bật tính năng ghi hoàn quỹ. Host cần chạy trip_member_refunds.sql trong Supabase.": "Refund recording is not enabled. The host must run trip_member_refunds.sql in Supabase.",
   "Đã hoàn thành viên": "Refunded to members",
