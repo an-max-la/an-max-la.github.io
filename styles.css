@@ -1843,3 +1843,38 @@ select:hover{border-color:#cfc9ef}
  .closing-refund-row{align-items:flex-start;flex-direction:column}
  .closing-refund-amount{align-items:flex-start}
 }
+
+/* Spending by category: overview dashboard, mobile-first and no chart library. */
+.category-dashboard{margin-top:20px;min-width:0}
+.category-dashboard-head{align-items:flex-start;gap:14px;flex-wrap:wrap}
+.category-dashboard-head>div{min-width:0;flex:1 1 210px}
+.category-dashboard-head h2{margin:0 0 4px}
+.category-dashboard-head p{margin:0}
+.category-dashboard-content{display:grid;grid-template-columns:minmax(180px,.76fr) minmax(0,1.24fr);gap:22px;align-items:center;padding-top:12px}
+.category-dashboard-chart{display:flex;align-items:center;justify-content:center;min-width:0}
+.category-dashboard-donut{width:min(100%,240px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;padding:20%;box-shadow:0 10px 35px #5b4dc01c}
+.category-dashboard-donut-center{width:100%;aspect-ratio:1;border-radius:50%;background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;text-align:center;box-shadow:0 0 0 6px #fff;min-width:0;padding:7px}
+.category-dashboard-donut-center small{font-size:clamp(10px,1.3vw,12px);font-weight:600;color:#85819c;line-height:1.3}
+.category-dashboard-donut-center strong{font-size:clamp(13px,1.9vw,20px);font-weight:800;color:#3d326e;line-height:1.2;overflow-wrap:anywhere}
+.category-dashboard-breakdown{display:grid;gap:12px;min-width:0}
+.category-dashboard-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;align-items:center;min-width:0}
+.category-dashboard-name{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px;font-weight:700;color:#373052;overflow-wrap:anywhere}
+.category-dashboard-swatch{width:11px;height:11px;border-radius:4px;flex:0 0 11px;background:var(--category-color)}
+.category-dashboard-money{font-size:13px;font-weight:800;color:#332c55;white-space:nowrap;font-variant-numeric:tabular-nums}
+.category-dashboard-bar{height:8px;background:#f0eff6;border-radius:20px;overflow:hidden;min-width:0}
+.category-dashboard-bar span{display:block;height:100%;border-radius:20px;background:var(--category-color)}
+.category-dashboard-percent{text-align:right;color:#77718f;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.category-dashboard-empty{grid-column:1/-1;margin:0;padding:15px 4px}
+@media(max-width:700px){
+ .category-dashboard-content{grid-template-columns:1fr;gap:18px}
+ .category-dashboard-donut{width:min(62vw,210px)}
+ .category-dashboard-donut-center strong{font-size:clamp(14px,4vw,20px)}
+ .category-dashboard-donut-center small{font-size:11px}
+}
+@media(max-width:390px){
+ .category-dashboard{margin-top:12px}
+ .category-dashboard-content{gap:12px}
+ .category-dashboard-breakdown{gap:11px}
+ .category-dashboard-name,.category-dashboard-money{font-size:12px}
+ .category-dashboard-row{column-gap:7px}
+}
