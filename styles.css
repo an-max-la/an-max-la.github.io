@@ -1743,13 +1743,14 @@ select:hover{border-color:#cfc9ef}
 .fund-reminder-row .fund-reminder-amount strong{font-size:clamp(15px,3.8vw,18px)}
 .fund-reminder-row .fund-reminder-actions{width:auto;margin:0;justify-content:flex-end}
 #contributionList .record-row{grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
-#contributionList .record-row>.record-buttons{display:flex;grid-column:auto;grid-row:auto;justify-content:flex-end;gap:6px}
-#contributionList .record-row>.record-amount{grid-column:auto;grid-row:auto}
+#contributionList .record-row>.record-main{grid-column:1;grid-row:1;min-width:0;overflow-wrap:anywhere}
+#contributionList .record-row>.record-amount{grid-column:2;grid-row:1;text-align:right;white-space:nowrap}
+#contributionList .record-row>.record-buttons{grid-column:3;grid-row:1}
+#contributionList .record-row>.record-buttons{display:flex;justify-content:flex-end;gap:6px}
 @container ledger (max-width:590px){
- #contributionList .record-row{grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;padding:12px}
- #contributionList .record-row>.record-main{grid-column:1;grid-row:1/3;min-width:0}
- #contributionList .record-row>.record-amount{grid-column:2;grid-row:1;text-align:right}
- #contributionList .record-row>.record-buttons{grid-column:2;grid-row:2;justify-content:flex-end}
+ #contributionList .record-row{grid-template-columns:minmax(0,1fr) auto auto;gap:6px;padding:10px;align-items:center}
+ #contributionList .record-row>.record-amount{font-size:clamp(11px,3.3vw,14px)}
+ #contributionList .record-row>.record-main .record-meta{font-size:11px}
 }
 @media(max-width:640px){
  .fund-reminder-panel .fund-reminder-row{grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:11px 10px}
@@ -1826,7 +1827,7 @@ select:hover{border-color:#cfc9ef}
 .closing-refund-member{display:flex;flex-direction:column;gap:4px;min-width:0}
 .closing-refund-member strong{font-size:14px;color:#29254e;overflow-wrap:anywhere}
 .closing-refund-member small{font-size:12px;color:#77728d;line-height:1.4}
-.closing-refund-amount{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;color:#5144b9}
+.closing-refund-amount{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:3px;flex-shrink:0;color:#5144b9}
 .closing-refund-amount strong{font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .closing-refund-amount small{font-size:11px;color:#77728d}
 .closing-refund-amount.owes{color:#b23e36}
@@ -1913,7 +1914,7 @@ select:hover{border-color:#cfc9ef}
 #contributionList .contribution-actions-dropdown .delete-contribution:hover,
 #contributionList .contribution-actions-dropdown .delete-contribution:focus-visible{background:#fff0ee}
 @container ledger (max-width:590px){
- #contributionList .record-row>.contribution-menu-actions{grid-column:2;grid-row:2;justify-content:flex-end}
+ #contributionList .record-row>.contribution-menu-actions{grid-column:3;grid-row:1;justify-content:flex-end}
 }
 
 /* Native iOS date controls can have an intrinsic width and height unlike selects.
@@ -1953,7 +1954,7 @@ select:hover{border-color:#cfc9ef}
 .closing-refund-tools button{min-height:42px}
 .closing-refunds-paid{background:#eaf7ef;color:#236b45}
 .closing-refunds-pending{background:#f6f1ff;color:#5b45ac}
-.closing-refund-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-end;min-width:0}
+.closing-refund-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-width:0}
 .closing-refund-actions button{min-height:40px;white-space:nowrap;font-size:12px}
 .closing-refund-payment-status{display:inline-flex;align-items:center;align-self:flex-start;gap:4px;font-size:11px;font-weight:700;color:#975f18;background:#fff5e8;border-radius:40px;padding:5px 9px;margin-top:4px}
 .closing-refund-payment-status.paid{background:#e8f7ee;color:#257448}

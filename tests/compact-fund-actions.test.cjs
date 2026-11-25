@@ -59,3 +59,17 @@ test('reserved amount chip is compact without reducing action hit targets',()=>{
  assert.match(css,/min-height:40px/);
  assert.match(read('i18n.js'),/"Dự phòng":"Reserved"/);
 });
+
+ test('contribution info, amount and settings occupy one grid row on narrow screens',()=>{
+ const css=read('styles.css');
+ assert.match(css,/#contributionList \.record-row\{grid-template-columns:minmax\(0,1fr\) auto auto;gap:6px/);
+ assert.match(css,/#contributionList \.record-row>\.record-main\{grid-column:1;grid-row:1;/);
+ assert.match(css,/#contributionList \.record-row>\.record-amount\{grid-column:2;grid-row:1;/);
+ assert.match(css,/#contributionList \.record-row>\.contribution-menu-actions\{grid-column:3;grid-row:1;/);
+ assert.doesNotMatch(css,/#contributionList \.record-row>\.(?:record-buttons|contribution-menu-actions)\{[^}]*grid-row:2/);
+ });
+ test('closing refund amounts are left aligned',()=>{
+ const css=read('styles.css');
+ assert.match(css,/\.closing-refund-amount\{display:flex;flex-direction:column;align-items:flex-start;text-align:left;/);
+ assert.match(css,/\.closing-refund-actions\{display:flex;flex-direction:column;gap:8px;align-items:flex-start;/);
+ });
