@@ -2,6 +2,14 @@
 (function(){
 'use strict';
 const dictionary={
+  "Chi tiêu theo danh mục":"Spending by category",
+  "Tỷ trọng chi phí của cả chuyến, tính theo VND.":"Share of total trip expenses, in VND.",
+  "Xem chi tiêu":"View expenses",
+  "Chưa có khoản chi để thống kê.":"No expenses to summarize yet.",
+  "Phân bổ chi tiêu theo danh mục":"Spending distribution by category",
+  "Tổng chi":"Total spent",
+  "khoản chi":"expenses",
+
   "Hoàn quỹ cuối chuyến":"End-of-trip fund refunds",
   "Tính số tiền mỗi người được nhận lại dựa trên tiền đã đóng và các khoản chi họ thực sự tham gia.":"Calculate each member's refund from contributions and the expenses they actually shared.",
   "Sao chép bảng hoàn quỹ":"Copy refund plan",
