@@ -119,14 +119,25 @@
     const memberCount=Math.max(1,members.length),initial=Math.round(Number(trip?.initial_fund||0));
     const initialShare=allocateWholeVnd(initial,new Map(members.map(m=>[m.user_id,initial/memberCount])),members);
     const shares=new Map(members.map(m=>[m.user_id,0]));
+    const memberIds=new Set(members.map(m=>m.user_id));
     for(const expense of expenses){
+      if(expense.split?.weights){
+        const valid=Object.entries(expense.split.weights).filter(([id,weight])=>memberIds.has(id)&&Number(weight)>0);
+        if(!valid.length||Object.keys(expense.split.weights).length!==valid.length)
+          issues.push('Có khoản chi với thành viên hoặc phần chia không hợp lệ.');
+      }
+      if(expense.payer_id&&!memberIds.has(expense.payer_id))
+        issues.push('Có khoản chi được ứng bởi thành viên không còn trong chuyến.');
       const allocation=allocateWholeVnd(expense.amount,allocateExpense(expense,members),members);
       for(const [id,value] of allocation)shares.set(id,(shares.get(id)||0)+value);
       if(expense.payer_id&&Number(expense.amount)-reimbursedAmount(expense)>.5)
         issues.push('Quỹ còn khoản ứng trước chưa hoàn cho thành viên.');
     }
     const contributionByMember=new Map(members.map(m=>[m.user_id,0]));
-    for(const c of contributions)contributionByMember.set(c.payer_id,(contributionByMember.get(c.payer_id)||0)+Math.round(Number(c.amount)));
+    for(const c of contributions){
+      if(!memberIds.has(c.payer_id))issues.push('Có khoản đóng quỹ của thành viên không còn trong chuyến.');
+      contributionByMember.set(c.payer_id,(contributionByMember.get(c.payer_id)||0)+Math.round(Number(c.amount)));
+    }
     for(const m of members){
       const contributed=contributionByMember.get(m.user_id)||0,opening=initialShare.get(m.user_id)||0;
       const spent=shares.get(m.user_id)||0;
