@@ -659,7 +659,7 @@ function render(){
   const lines=['HOÀN QUỸ CUỐI CHUYẾN — '+trip.name,'Số dư dự kiến: '+money(closeReport.expectedRemaining),
    ...closeReport.rows.map(person=>person.name+': '+(person.refund<0?'cần đóng thêm ':'nhận lại ')+money(Math.abs(person.refund))),
    'Chỉ là dự kiến; chưa ghi nhận hay chuyển bất kỳ khoản hoàn quỹ nào.'];
-  try{await navigator.clipboard.writeText(lines.join('\\n'));status('Đã sao chép bảng hoàn quỹ')}
+  try{await navigator.clipboard.writeText(lines.join('\n'));status('Đã sao chép bảng hoàn quỹ')}
   catch(error){localizedAlert('Không thể sao chép bảng hoàn quỹ trên trình duyệt này.')}
  };
  const expenseTransfers=settle(expenseBalances);$('expenseSettlements').innerHTML=expenseTransfers.length?expenseTransfers.map(t=>`<div class="settlement-row"><span>${esc(t.from)} → ${esc(t.to)}</span><b>${money(t.amount)}</b></div>`).join(''):'<p class="muted small">Quỹ đã cân đối theo phần đóng góp.</p>';
