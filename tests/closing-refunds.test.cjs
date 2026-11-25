@@ -33,7 +33,7 @@ test('distribute rounding in VND without losing or creating money',()=>{
  const r=F.calculateClosingRefunds({initial_fund:100},members,[exp(1)],[]);
  assert.equal(r.canRefund,true);
  assert.equal(r.rows.reduce((sum,x)=>sum+x.refund,0),99);
- assert.deepEqual(r.rows.map(x=>x.refund),[34,33,32]);
+ assert.deepEqual(r.rows.map(x=>x.refund),[33,33,33]);
 });
 test('unpaid advances block showing the refund list as ready',()=>{
  const expenses=[exp(100000,{mode:'equal',weights:{a:1,b:1}},'a')];
