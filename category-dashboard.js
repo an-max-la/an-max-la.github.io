@@ -18,7 +18,8 @@
    current.amount+=amount;current.count++;
    totals.set(category,current);total+=amount;count++;
   }
-  const rows=[...totals.values()].sort((a,b)=>b.amount-a.amount||a.key.localeCompare(b.key));
+  const isOther=key=>key==='Other'||key==='Khác';
+  const rows=[...totals.values()].sort((a,b)=>Number(isOther(a.key))-Number(isOther(b.key))||b.amount-a.amount||a.key.localeCompare(b.key));
   return {total,count,rows:rows.map(row=>({...row,share:total?row.amount/total*100:0}))};
  }
  return {summarize};
